@@ -1,11 +1,11 @@
-# xlit-router
+# @xlit/router
 
 Vanilla router custom element with multiple routes and middlewares.
 
 ## Installation
 
 ```sh
-npm i xlit-router
+npm i @xlit/router
 ```
 
 ## Getting started
@@ -37,7 +37,7 @@ the router instance as example below.
 Write `index.js`:
 
 ```typescript
-import 'xlit-router';
+import '@xlit/router';
 ```
 
 ## Router Mixin/Decorator
@@ -68,7 +68,7 @@ attribute. If no outlet defined, default outlet element will be element itself.
 Write `index.ts` to be compiled as `index.js`.
 
 ```typescript
-import { router } from 'xlit-router';
+import { router } from '@xlit/router';
 
 // use router decorator
 
@@ -106,7 +106,7 @@ Use class `Router` to define router programmatically in javascript.
 ```
 
 ```typescript
-import { Router } from 'xlit-router';
+import { Router } from '@xlit/router';
 
 const router = new Router(document.getElementById('outlet'))
   .use(async (ctx, next) => {
@@ -177,7 +177,7 @@ Route can be defined programmatically as router mixin/decorator options.
 ```
 
 ```typescript
-import { router } from 'xlit-router';
+import { router } from '@xlit/router';
 
 @router({
   // define routes programmatically as options
@@ -305,7 +305,7 @@ async function go (delta: number): Promise<void>;
 ```
 
 ```typescript
-import { push, pop, replace, go } from 'xlit-router';
+import { push, pop, replace, go } from '@xlit/router';
 
 (async () => {
   await push('/foo/bar', { name: 'foobar' });
