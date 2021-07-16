@@ -1,0 +1,44 @@
+{
+  "name": "@xlit/router",
+  "version": "0.0.0",
+  "description": "xlit router custom element",
+  "type": "module",
+  "main": "index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist/index.d.ts",
+    "/dist/index.js",
+    "/dist/index.js.map"
+  ],
+  "scripts": {
+    "prepublish": "npm run clean; npm run build",
+    "clean": "rm -rf dist/",
+    "build": "tsc",
+    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "router",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "devDependencies": {
+    "@open-wc/testing": "^2.5.33",
+    "@web/dev-server-esbuild": "^0.2.12",
+    "@web/test-runner": "^0.13.11",
+    "lit": "^2.0.0-rc.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

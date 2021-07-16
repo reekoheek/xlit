@@ -1,0 +1,32 @@
+{
+  "name": "xlit-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "scripts": {
+    "prepare": "husky install",
+    "test": "lerna run test",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "devDependencies": {
+    "eslint": "^7.30.0",
+    "eslint-config-xinix": "^1.2.1",
+    "husky": "^7.0.1",
+    "lerna": "^4.0.0",
+    "lint-staged": "^11.0.1",
+    "typescript": "^4.3.5"
+  },
+  "lint-staged": {
+    "*.{mjs,js,ts}": "eslint"
+  }
+}
