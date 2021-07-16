@@ -1,7 +1,7 @@
 {
-  "name": "@xlit/router",
+  "name": "@xlit/di",
   "version": "0.0.0",
-  "description": "xlit router custom element",
+  "description": "xlit dependency injection custom element",
   "type": "module",
   "main": "index.js",
   "module": "dist/index.js",
@@ -15,15 +15,15 @@
     "prepublish": "npm run clean; npm run build",
     "clean": "rm -rf dist/",
     "build": "tsc",
-    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
-    "lint": "eslint ."
+    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/reekoheek/xlit.git"
   },
   "keywords": [
-    "router",
+    "di",
+    "dependency injection",
     "customelements",
     "webcomponents"
   ],

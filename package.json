@@ -5,7 +5,9 @@
   "description": "",
   "scripts": {
     "prepare": "husky install",
-    "test": "lerna run test",
+    "test": "(cd packages/router && npm test) && (cd packages/di && npm test)",
+    "new-version": "lerna version --conventional-commits --yes",
+    "diff": "lerna diff",
     "lint": "eslint ."
   },
   "repository": {
@@ -19,6 +21,8 @@
   },
   "homepage": "https://github.com/reekoheek/xlit#readme",
   "devDependencies": {
+    "@web/dev-server-esbuild": "^0.2.12",
+    "@web/test-runner": "^0.13.13",
     "eslint": "^7.30.0",
     "eslint-config-xinix": "^1.2.1",
     "husky": "^7.0.1",
