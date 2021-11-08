@@ -8,7 +8,8 @@
     "test": "(cd packages/router && npm test) && (cd packages/di && npm test)",
     "new-version": "lerna version --conventional-commits --yes",
     "diff": "lerna diff",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lpub": "lerna publish --force-publish"
   },
   "repository": {
     "type": "git",
