@@ -68,12 +68,12 @@ describe('di', () => {
       configure({
         instances: { foo: 'foo' },
       });
-      assert.strictEqual(lookup(document.body, 'foo'), 'foo');
+      assert.strictEqual(lookup('foo', document.body), 'foo');
     });
 
     it('throw error if no result', () => {
       assert.throw(() => {
-        lookup(window, 'foo');
+        lookup('foo', window);
       }, 'lookup no result');
     });
   });
@@ -103,10 +103,10 @@ describe('di', () => {
       `);
       const here = el.querySelector('#here');
       if (!here) throw new Error('fail querySelector');
-      assert.strictEqual(lookup(here, 'foo'), 'foox');
-      assert.strictEqual(lookup(here, 'bar'), 'bar');
-      assert.strictEqual(lookup(el, 'foo'), 'foox');
-      assert.strictEqual(lookup(document.body, 'foo'), 'foo');
+      assert.strictEqual(lookup('foo', here), 'foox');
+      assert.strictEqual(lookup('bar', here), 'bar');
+      assert.strictEqual(lookup('foo', el), 'foox');
+      assert.strictEqual(lookup('foo', document.body), 'foo');
     });
   });
 
@@ -123,7 +123,7 @@ describe('di', () => {
         @inject()
         foo!: string;
 
-        @inject('dt')
+        @inject({ from: 'dt', after: true })
         now!: Date;
       }
       customElements.define('tdi-el', TDIEl);

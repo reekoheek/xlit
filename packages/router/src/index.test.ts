@@ -336,11 +336,11 @@ describe('xlit-router', () => {
   describe('Router', () => {
     describe('constructor', () => {
       it('create new router with default value', () => {
-        const router = new Router();
-        assert.strictEqual((<Outlet>router.outlet).host, document.body);
-        assert.strictEqual(router.basePath, '/');
-        assert.strictEqual(router.routes.length, 0);
-        assert.strictEqual(router.middlewares.length, 0);
+        const r = new Router();
+        assert.strictEqual((<Outlet>r.outlet).host, document.body);
+        assert.strictEqual(r.basePath, '/');
+        assert.strictEqual(r.routes.length, 0);
+        assert.strictEqual(r.middlewares.length, 0);
       });
 
       it('create new router with specified outlet and options', () => {
@@ -357,47 +357,50 @@ describe('xlit-router', () => {
             () => Promise.resolve(),
           ],
         };
-        const router = new Router(el, opts);
-        assert.strictEqual((<Outlet>router.outlet).host, el);
-        assert.strictEqual(router.basePath, '/x');
-        assert.strictEqual(router.routes.length, 2);
-        assert.strictEqual(router.middlewares.length, 3);
+        const r = new Router(el, opts);
+        assert.strictEqual((<Outlet>r.outlet).host, el);
+        assert.strictEqual(r.basePath, '/x');
+        assert.strictEqual(r.routes.length, 2);
+        assert.strictEqual(r.middlewares.length, 3);
       });
     });
 
     describe('#use()', () => {
       it('add middlewares', () => {
-        const router = new Router();
-        router.use(() => Promise.resolve(), () => Promise.resolve());
-        assert.strictEqual(router.middlewares.length, 2);
+        const r = new Router();
+        r.use(() => Promise.resolve(), () => Promise.resolve());
+        assert.strictEqual(r.middlewares.length, 2);
       });
     });
 
     describe('#route()', () => {
       it('add routes', () => {
-        const router = new Router();
-        router.route(
+        const r = new Router();
+        r.route(
           { path: '/foo', template: 'x-foo' },
           { path: '/bar', template: 'x-bar' },
         );
-        assert.strictEqual(router.routes.length, 2);
+        assert.strictEqual(r.routes.length, 2);
       });
     });
 
     describe('#dispatch()', () => {
       it('return false on invalid prefix', async () => {
         const outlet = document.createElement('div');
-        const router = new Router(outlet, { basePath: '/foo' });
-        const result = await router.dispatch({ path: '/bar' });
+        const r = new Router(outlet, { basePath: '/foo' });
+        const result = await r.dispatch({ path: '/bar' });
         assert.strictEqual(result, false);
       });
 
       it('throw error if route is not resolved', async () => {
-        const router = new Router(document.createElement('div'));
+        const r = new Router(document.createElement('div'));
         try {
-          await router.dispatch({ path: '/' });
+          await r.dispatch({ path: '/' });
           throw new Error('must throw err');
         } catch (err) {
+          if (!(err instanceof Error)) {
+            throw err;
+          }
           if (err.message === 'must throw err') {
             throw err;
           }
@@ -407,7 +410,7 @@ describe('xlit-router', () => {
 
       it('invoke middlewares, resolve route and render outlet', async () => {
         const logs: string[] = [];
-        const router = new Router(document.createElement('div'), {
+        const r = new Router(document.createElement('div'), {
           middlewares: [
             async (_, next) => {
               logs.push('m1');
@@ -424,14 +427,14 @@ describe('xlit-router', () => {
             { path: '/', template: 'x-home' },
           ],
         });
-        router.outlet = {
+        r.outlet = {
           render (route, ctx) {
             assert.strictEqual(route.template, 'x-home');
             assert.strictEqual(ctx.path, '/');
             return Promise.resolve();
           },
         };
-        const result = await router.dispatch({ path: '/' });
+        const result = await r.dispatch({ path: '/' });
         assert.strictEqual(result, true);
         assert.deepStrictEqual(logs, ['m1', 'n1', 'n2', 'm2']);
       });
@@ -440,9 +443,9 @@ describe('xlit-router', () => {
     describe('#listen()', () => {
       it('add to dispatchers', () => {
         configure();
-        const router = new Router(document.createElement('div:w'));
-        router.route({ path: '*', template: 'foo' });
-        router.listen();
+        const r = new Router(document.createElement('div:w'));
+        r.route({ path: '*', template: 'foo' });
+        r.listen();
         assert.strictEqual(inspect()?.dispatchers.length, 1);
       });
     });
@@ -450,9 +453,9 @@ describe('xlit-router', () => {
     describe('#unlisten()', () => {
       it('remove from dispatchers', () => {
         configure();
-        const router = new Router();
-        inspect()?.dispatchers.push(router);
-        router.unlisten();
+        const r = new Router();
+        inspect()?.dispatchers.push(r);
+        r.unlisten();
         assert.strictEqual(inspect()?.dispatchers.length, 0);
       });
     });

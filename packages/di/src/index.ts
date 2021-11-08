@@ -79,7 +79,7 @@ export function configure (opts: Partial<ContainerOptions> = {}): Container {
   return container;
 }
 
-export function lookup<T> (target: EventTarget = window, name: string): T {
+export function lookup<T> (name: string, target: EventTarget = window): T {
   const evt = new CustomEvent<LookupDetail>('di-lookup', {
     detail: { name },
     bubbles: true,
@@ -152,6 +152,7 @@ export function provider (opts?: Partial<ContainerOptions>) {
 interface Injectable {
   readonly from: string;
   readonly to: string;
+  readonly after: boolean;
 }
 
 interface InjectableElement {
@@ -159,25 +160,40 @@ interface InjectableElement {
   connectedCallback?(): void;
 }
 
-export function inject (optName?: string) {
+interface InjectOptions {
+  from: string;
+  after: boolean;
+}
+
+export function inject (opt?: Partial<InjectOptions>) {
   return function (target: unknown, propName: string): void {
-    const fromName = optName || propName;
+    const fromName = opt?.from || propName;
+    const after = Boolean(opt?.after);
     const el = target as InjectableElement;
     if (!el.injectables) {
       const injectables = el.injectables = [];
       const defaultCallback = el.connectedCallback;
       el.connectedCallback = function () {
-        injectables.forEach(({ from, to }) => {
-          this[to] = lookup(this as EventTarget, from);
+        const afterInjectables: Injectable[] = [];
+        injectables.forEach(({ from, to, after }) => {
+          if (after) {
+            afterInjectables.push({ from, to, after });
+          } else {
+            (this as any)[to] = lookup(from, this as EventTarget);
+          }
         });
         if (defaultCallback) {
           defaultCallback.call(this);
         }
+        afterInjectables.forEach(({ from, to }) => {
+          (this as any)[to] = lookup(from, this as EventTarget);
+        });
       };
     }
     el.injectables.push({
       from: fromName,
       to: propName,
+      after,
     });
   };
 }

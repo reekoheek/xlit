@@ -1,6 +1,6 @@
 type Mode = 'history' | 'hash'
 
-interface Context {
+export interface Context {
   readonly path: string;
   readonly query?: Record<string, string>;
   readonly params?: Record<string, string>;
@@ -55,11 +55,11 @@ interface Route extends RouteDef {
   readonly args?: string[];
 }
 
-interface NextFn {
+export interface NextFn {
   (): Promise<void>;
 }
 
-interface Middleware {
+export interface Middleware {
   (ctx: Context, next: NextFn): Promise<void>;
 }
 
@@ -71,7 +71,7 @@ interface Constructor<T> {
   new (...args: any[]): T; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-interface MaybeCustomeElement extends HTMLElement {
+interface CustomeElement extends HTMLElement {
   connectedCallback?(): void;
   disconnectedCallback?(): void;
 }
@@ -158,6 +158,7 @@ function handleClick (evt: Event) {
     if (!target) {
       return;
     }
+
     evt.preventDefault();
     const parsed = parseLocation(target, getState().config.mode);
     history.pushState(null, '', target.href);
@@ -452,12 +453,9 @@ export class Routes {
   }
 
   forContext (ctx: Context): [Route, Context] {
-    const route = this.routes.find(route => {
-      if (route.pattern) {
-        return ctx.path.match(route.pattern);
-      }
-      return route.path === '*' || route.path === ctx.path;
-    });
+    const route = this.routes.find(r => r.pattern
+      ? ctx.path.match(r.pattern)
+      : (r.path === '*' || r.path === ctx.path));
     if (!route) {
       throw new Error('route not found');
     }
@@ -588,7 +586,7 @@ interface IRouterElement {
 }
 
 export function router (opts: Partial<MixinOptions> = {}) {
-  return function <TBase extends Constructor<MaybeCustomeElement>> (Base: TBase): TBase & Constructor<IRouterElement> {
+  return function <TBase extends Constructor<CustomeElement>> (Base: TBase): TBase & Constructor<IRouterElement> {
     return class extends Base {
       router!: Router;
       routerReady?: Promise<void>;
@@ -647,13 +645,13 @@ interface Navigator {
 }
 
 export function navigator () {
-  return function <TBase extends Constructor<MaybeCustomeElement>> (Base: TBase): TBase & Constructor<Navigator> {
+  return function <TBase extends Constructor<CustomeElement>> (Base: TBase): TBase & Constructor<Navigator> {
     return class extends Base {
-      push (path: string, state: unknown): Promise<void> {
+      push (path: string, state: unknown = undefined): Promise<void> {
         return push(path, state);
       }
 
-      replace (path: string, state: unknown): Promise<void> {
+      replace (path: string, state: unknown = undefined): Promise<void> {
         return replace(path, state);
       }
 
