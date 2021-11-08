@@ -179,14 +179,14 @@ export function inject (opt?: Partial<InjectOptions>) {
           if (after) {
             afterInjectables.push({ from, to, after });
           } else {
-            (this as any)[to] = lookup(from, this as EventTarget);
+            (this as never)[to] = lookup(from, this as EventTarget);
           }
         });
         if (defaultCallback) {
           defaultCallback.call(this);
         }
         afterInjectables.forEach(({ from, to }) => {
-          (this as any)[to] = lookup(from, this as EventTarget);
+          (this as never)[to] = lookup(from, this as EventTarget);
         });
       };
     }

@@ -35,6 +35,12 @@ configure({
 class XApp extends HTMLElement {
   @inject()
   foo!: string;
+
+  @inject({ name: 'bar' })
+  bar!: string;
+
+  @inject({ after: true })
+  baz!: string;
 }
 customElements.define('x-app', XApp);
 ```
