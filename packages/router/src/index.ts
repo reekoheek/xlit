@@ -638,8 +638,8 @@ export function router (opts: Partial<MixinOptions> = {}) {
 }
 
 interface Navigator {
-  push (path: string, state: unknown): Promise<void>;
-  replace (path: string, state: unknown): Promise<void>;
+  push (path: string, state?: unknown): Promise<void>;
+  replace (path: string, state?: unknown): Promise<void>;
   pop (): Promise<void>;
   go (delta: number): Promise<void>;
 }
@@ -647,11 +647,11 @@ interface Navigator {
 export function navigator () {
   return function <TBase extends Constructor<CustomeElement>> (Base: TBase): TBase & Constructor<Navigator> {
     return class extends Base {
-      push (path: string, state: unknown = undefined): Promise<void> {
+      push (path: string, state?: unknown): Promise<void> {
         return push(path, state);
       }
 
-      replace (path: string, state: unknown = undefined): Promise<void> {
+      replace (path: string, state?: unknown): Promise<void> {
         return replace(path, state);
       }
 
