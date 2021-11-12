@@ -11,7 +11,7 @@ npm i @xlit/di
 ## Getting started
 
 ```typescript
-import { configure, inject } from '@xlit/di';
+import { container, inject } from '@xlit/di';
 
 /**
  * Configure root container to have instances, singletons and factories

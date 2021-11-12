@@ -1,5 +1,9 @@
+export interface ILookupContainer {
+  lookup<T> (name: string): T | undefined;
+}
+
 interface FactoryFn {
-  (): unknown;
+  (c: ILookupContainer): unknown;
 }
 
 interface ContainerOptions {
@@ -8,14 +12,10 @@ interface ContainerOptions {
   readonly factories: Record<string, FactoryFn>;
 }
 
-export class Container {
+export class Container implements ILookupContainer {
   fns: Record<string, FactoryFn> = {};
 
   constructor (opts: Partial<ContainerOptions> = {}) {
-    this.configure(opts);
-  }
-
-  configure (opts: Partial<ContainerOptions>): void {
     for (const name in opts.instances) {
       this.instance(name, opts.instances[name]);
     }
@@ -38,9 +38,7 @@ export class Container {
   singleton (name: string, fn: FactoryFn): void {
     let cache: unknown;
     this.factory(name, () => {
-      if (!cache) {
-        cache = fn();
-      }
+      if (cache === undefined) cache = fn(this);
       return cache;
     });
   }
@@ -48,39 +46,18 @@ export class Container {
   lookup<T> (name: string): T | undefined {
     if (name in this.fns) {
       const fn = this.fns[name];
-      return fn() as T;
+      return fn(this) as T;
     }
   }
 }
 
-interface LookupDetail {
-  name: string;
+interface LookupEventDetail {
+  readonly name: string;
   instance?: unknown;
 }
 
-interface ContainerizedElement {
-  diContainer?: Container;
-  diLookupListener?(evt: CustomEvent<LookupDetail>): void;
-  addEventListener(name: string, listener: { (evt: CustomEvent): void }): void;
-  removeEventListener(name: string, listener: { (evt: CustomEvent): void }): void;
-}
-
-export function reset (): void {
-  uninit(window);
-}
-
-export function configure (opts: Partial<ContainerOptions> = {}): Container {
-  const el = window as ContainerizedElement;
-  if (!el.diContainer) {
-    return init(el, opts);
-  }
-  const container = el.diContainer;
-  container.configure(opts);
-  return container;
-}
-
-export function lookup<T> (name: string, target: EventTarget = window): T {
-  const evt = new CustomEvent<LookupDetail>('di-lookup', {
+export function lookup<T> (target: EventTarget, name: string): T | undefined {
+  const evt = new CustomEvent<LookupEventDetail>('di-lookup', {
     detail: { name },
     bubbles: true,
     composed: true,
@@ -89,31 +66,65 @@ export function lookup<T> (name: string, target: EventTarget = window): T {
   if (evt.detail.instance) {
     return evt.detail.instance as T;
   }
-  throw new Error('lookup no result');
 }
 
-function init (el: ContainerizedElement, opts?: Partial<ContainerOptions>): Container {
-  if (!el.diContainer) {
-    const container = el.diContainer = new Container(opts);
-    el.diLookupListener = (evt) => {
-      const instance = container.lookup(evt.detail.name);
-      if (!instance) {
-        return;
-      }
-      evt.stopImmediatePropagation();
-      evt.detail.instance = instance;
-    };
-    el.addEventListener('di-lookup', el.diLookupListener);
-  }
-  return el.diContainer;
+type ProvideType = 'singleton' | 'instance' | 'factory';
+
+interface ProvideEventDetail {
+  readonly name: string;
+  readonly type: ProvideType;
+  readonly value: unknown;
 }
 
-function uninit (el: ContainerizedElement): void {
-  if (el.diLookupListener) {
-    el.removeEventListener('di-lookup', el.diLookupListener);
+export function provide (target: EventTarget, detail: ProvideEventDetail): void {
+  const evt = new CustomEvent<ProvideEventDetail>('di-provide', {
+    detail,
+    bubbles: true,
+    composed: true,
+  });
+  target.dispatchEvent(evt);
+}
+
+interface ContainerElement {
+  addEventListener(name: string, listener: { (evt: CustomEvent): void }): void;
+  removeEventListener(name: string, listener: { (evt: CustomEvent): void }): void;
+  __diContainer?: Container;
+  __diLookupListener?(evt: CustomEvent<LookupEventDetail>): void;
+  __diProvideListener?(evt: CustomEvent<ProvideEventDetail>): void;
+}
+
+export function attach (el: ContainerElement, opts?: Partial<ContainerOptions>): void {
+  if ('__diContainer' in el) {
+    return;
   }
-  el.diContainer = undefined;
-  el.diLookupListener = undefined;
+
+  const container = new Container(opts);
+
+  el.__diLookupListener = (evt) => {
+    const instance = container.lookup(evt.detail.name);
+    if (instance === undefined) {
+      return;
+    }
+    evt.stopImmediatePropagation();
+    evt.detail.instance = instance;
+  };
+  el.addEventListener('di-lookup', el.__diLookupListener);
+
+  el.__diProvideListener = (evt) => {
+    evt.stopImmediatePropagation();
+    container[evt.detail.type](evt.detail.name, evt.detail.value as FactoryFn);
+  };
+  el.addEventListener('di-provide', el.__diProvideListener);
+
+  el.__diContainer = container;
+}
+
+export function detach (el: ContainerElement): void {
+  if (el.__diLookupListener) el.removeEventListener('di-lookup', el.__diLookupListener);
+  if (el.__diProvideListener) el.removeEventListener('di-provide', el.__diProvideListener);
+  delete el.__diContainer;
+  delete el.__diLookupListener;
+  delete el.__diProvideListener;
 }
 
 type Constructor<T> = {
@@ -125,75 +136,90 @@ interface CustomElement extends HTMLElement {
   disconnectedCallback?(): void;
 }
 
-interface Provider extends HTMLElement {
-  diContainer?: Container;
-}
-
-export function provider (opts?: Partial<ContainerOptions>) {
-  return function <TBase extends Constructor<CustomElement>> (Base: TBase): TBase & Constructor<Provider> {
+export function container (opts?: Partial<ContainerOptions>) {
+  return function <TBase extends Constructor<CustomElement>> (Base: TBase): TBase & Constructor<CustomElement> {
     return class extends Base {
       connectedCallback () {
-        if (super.connectedCallback) {
-          super.connectedCallback();
-        }
-        init(this, opts);
+        if (super.connectedCallback) super.connectedCallback();
+        attach(this, opts);
       }
 
-      disconnectedCallback () {
-        if (super.disconnectedCallback) {
-          super.disconnectedCallback();
-        }
-        uninit(this);
-      }
+      // disconnectedCallback () {
+      //   if (super.disconnectedCallback) super.disconnectedCallback();
+      //   detach(this);
+      // }
     };
   };
 }
 
-interface Injectable {
+interface Inject {
   readonly from: string;
   readonly to: string;
-  readonly after: boolean;
 }
 
-interface InjectableElement {
-  injectables?: Injectable[];
-  connectedCallback?(): void;
+interface Injectable {
+  readonly type: ProvideType;
+  readonly from: string;
+  readonly to: string;
 }
 
-interface InjectOptions {
-  from: string;
-  after: boolean;
+interface ConsumerElement extends CustomElement {
+  __diInjects: Inject[];
+  __diInjectables: Injectable[];
 }
 
-export function inject (opt?: Partial<InjectOptions>) {
-  return function (target: unknown, propName: string): void {
-    const fromName = opt?.from || propName;
-    const after = Boolean(opt?.after);
-    const el = target as InjectableElement;
-    if (!el.injectables) {
-      const injectables = el.injectables = [];
-      const defaultCallback = el.connectedCallback;
-      el.connectedCallback = function () {
-        const afterInjectables: Injectable[] = [];
-        injectables.forEach(({ from, to, after }) => {
-          if (after) {
-            afterInjectables.push({ from, to, after });
-          } else {
-            (this as never)[to] = lookup(from, this as EventTarget);
-          }
-        });
-        if (defaultCallback) {
-          defaultCallback.call(this);
-        }
-        afterInjectables.forEach(({ from, to }) => {
-          (this as never)[to] = lookup(from, this as EventTarget);
-        });
-      };
-    }
-    el.injectables.push({
-      from: fromName,
+type Receiver = Record<string, unknown>;
+
+function attachConsumer (el: Partial<ConsumerElement>): ConsumerElement {
+  if ('__diInjects' in el) {
+    return el as ConsumerElement;
+  }
+
+  el.__diInjects = [];
+  el.__diInjectables = [];
+
+  const consumer = el as ConsumerElement;
+
+  const defaultCallback = consumer.connectedCallback;
+  consumer.connectedCallback = function () {
+    if (defaultCallback) defaultCallback.call(this);
+
+    this.__diInjectables.forEach(({ type, to, from }) => {
+      const receiver = (<unknown> this) as Receiver;
+      provide(this, { type, name: to, value: receiver[from] });
+    });
+
+    this.__diInjects.forEach(({ to, from }) => {
+      const receiver = (<unknown> this) as Receiver;
+      receiver[to] = lookup(this, from);
+    });
+  };
+
+  return consumer;
+}
+
+export function inject (name?: string) {
+  return function (target: Partial<ConsumerElement>, propName: string): void {
+    const el = attachConsumer(target);
+    el.__diInjects.push({
+      from: name || propName,
       to: propName,
-      after,
+    });
+  };
+}
+
+interface InjectableOptions {
+  readonly type: ProvideType;
+  readonly name: string;
+}
+
+export function injectable (opts?: Partial<InjectableOptions>) {
+  return function (target: Partial<ConsumerElement>, propName: string): void {
+    const el = attachConsumer(target);
+    el.__diInjectables.push({
+      type: opts?.type ?? 'instance',
+      from: propName,
+      to: opts?.name || propName,
     });
   };
 }
