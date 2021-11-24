@@ -4,7 +4,7 @@
     "module": "es2020",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -12,5 +12,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./**/*.test.ts"]
 }

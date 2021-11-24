@@ -1,529 +1,640 @@
 import { assert, fixture, html } from '@open-wc/testing';
 import {
-  debug,
-  inspect,
-  configure,
-  reset,
-  push,
-  replace,
-  pop,
-  go,
-  Outlet,
-  Middlewares,
-  Routes,
+  component,
+  Context,
+  DefaultOutlet,
+  getContextPath,
+  getHistoryURL,
+  invokeMiddlewareChain,
+  Route,
   Router,
-  router,
-  RouterElement,
-} from './index';
+  RouterOptions,
+  template,
+} from './';
 
-describe('xlit-router', () => {
-  beforeEach(() => {
-    debug(true);
-    reset();
-    history.replaceState(null, '', '#');
-  });
-
-  afterEach(() => {
-    debug(false);
-    reset();
-  });
-
-  describe('reset()', () => {
-    it('remove state', () => {
-      configure();
-      reset();
-      assert.strictEqual(inspect(), undefined);
-    });
-  });
-
-  describe('configure()', () => {
-    it('initialize state', () => {
-      configure();
-      assert.notStrictEqual(inspect(), undefined);
-    });
-
-    it('extend config', () => {
-      configure();
-      assert.strictEqual(inspect()?.config.mode, 'history');
-      configure({ mode: 'hash' });
-      assert.strictEqual(inspect()?.config.mode, 'hash');
-    });
-
-    it('listening popstate event', () => {
-      let hit = 0;
-      debug({ popStateEventListener: () => (hit++) });
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      assert.strictEqual(hit, 0);
-      configure();
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      assert.strictEqual(hit, 1);
-    });
-
-    it('listening click event', () => {
-      let hit = 0;
-      debug({ clickEventListener: () => (hit++) });
-      window.dispatchEvent(new CustomEvent('click'));
-      assert.strictEqual(hit, 0);
-      configure();
-      window.dispatchEvent(new CustomEvent('click'));
-      assert.strictEqual(hit, 1);
-    });
-
-    it('listening router-dispatch event', () => {
-      let hit = 0;
-      debug({ routerDispatchEventListener: () => (hit++) });
-      window.dispatchEvent(new CustomEvent('router-dispatch'));
-      assert.strictEqual(hit, 0);
-      configure();
-      window.dispatchEvent(new CustomEvent('router-dispatch'));
-      assert.strictEqual(hit, 1);
-    });
-  });
-
-  describe('inspect()', () => {
-    it('inspect state', () => {
-      assert.strictEqual(inspect(), undefined);
-      configure();
-      assert.notStrictEqual(inspect(), undefined);
-    });
-  });
-
-  describe('event: click', () => {
-    it('push to location and dispatch', async () => {
-      history.replaceState(null, '', '#!/1');
-      history.pushState(null, '', '#!/2');
-      debug({
-        routerDispatchEventListener: () => undefined,
-      });
-      configure({ mode: 'hash' });
-      const el = await fixture(html`<a href="#!/foo">click</a>`);
-      const dispatched = waitFor(window, 'router-dispatch');
-      el.dispatchEvent(new CustomEvent('click', { bubbles: true }));
-      await dispatched;
-      assert.strictEqual(location.hash, '#!/foo');
-      const navigated = waitFor(window, 'popstate');
-      history.back();
-      await navigated;
-      assert.strictEqual(location.hash, '#!/2');
-      history.replaceState(null, '', '#');
-    });
-  });
-
-  describe('event: router-dispatch', () => {
-    it('dispatch to all registered dispatchers', () => {
-      const logs: number[] = [];
-      const createDispatcher = (index: number) => ({
-        dispatch () {
-          logs.push(index);
-          return Promise.resolve(true);
-        },
-      });
-      configure();
-      const state = inspect();
-      state?.dispatchers.push(createDispatcher(1));
-      state?.dispatchers.push(createDispatcher(2));
-      state?.dispatchers.push(createDispatcher(3));
-      window.dispatchEvent(new CustomEvent('router-dispatch', { detail: { path: '/' } }));
-      assert.deepStrictEqual(logs, [1, 2, 3]);
-    });
-  });
-
-  describe('push()', () => {
-    it('push history', async () => {
-      history.replaceState(null, '', '#!/1');
-      history.pushState(null, '', '#!/2');
-      configure({ mode: 'hash' });
-      await push('/foo');
-      assert.strictEqual(location.hash, '#!/foo');
-      const dispatched = waitFor(window, 'router-dispatch');
-      history.back();
-      await dispatched;
-      assert.strictEqual(location.hash, '#!/2');
-    });
-  });
-
-  describe('replace()', () => {
-    it('push history', async () => {
-      history.replaceState(null, '', '#!/1');
-      history.pushState(null, '', '#!/2');
-      configure({ mode: 'hash' });
-      await replace('/foo');
-      assert.strictEqual(location.hash, '#!/foo');
-      const dispatched = waitFor(window, 'router-dispatch');
-      history.back();
-      await dispatched;
-      assert.strictEqual(location.hash, '#!/1');
-    });
-  });
-
-  describe('go()', () => {
-    it('go back and forth in history', async () => {
-      history.replaceState(null, '', '#!/1');
-      history.pushState(null, '', '#!/2');
-      configure({ mode: 'hash' });
-      await go(-1);
-      assert.strictEqual(location.hash, '#!/1');
-      await go(1);
-      assert.strictEqual(location.hash, '#!/2');
-    });
-  });
-
-  describe('pop()', () => {
-    it('pop history', async () => {
-      await pop();
-      assert.strictEqual(location.hash, '#!/1');
-    });
-  });
-
-  describe('Outlet', () => {
-    describe('#render()', () => {
-      it('render tag', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        await outlet.render({ path: '/', template: 'foo-bar' }, { path: '/' });
-        assert.notStrictEqual(host.querySelector('foo-bar'), null);
-      });
-
-      it('render element', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        const route = {
-          path: '/',
-          template: document.createElement('foo-bar'),
-        };
-        await outlet.render(route, { path: '/' });
-        assert.notStrictEqual(host.querySelector('foo-bar'), null);
-      });
-
-      it('render document fragment', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        const df = document.createDocumentFragment();
-        df.appendChild(document.createElement('x-foo'));
-        df.appendChild(document.createElement('x-bar'));
-        const route = {
-          path: '/',
-          template: df,
-        };
-        await outlet.render(route, { path: '/' });
-        assert.notStrictEqual(host.querySelector('x-foo'), null);
-        assert.notStrictEqual(host.querySelector('x-bar'), null);
-        assert.notStrictEqual(df.querySelector('x-foo'), null);
-        assert.notStrictEqual(df.querySelector('x-bar'), null);
-      });
-
-      it('render function template', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        const route = {
-          path: '/',
-          template (ctx: { path: string }) {
-            assert.strictEqual(ctx.path, '/foo');
-            return Promise.resolve('foo-bar');
+describe('router', () => {
+  describe('Context', () => {
+    describe('#equals()', () => {
+      it('return true if same or false if not same', () => {
+        const tests: {
+          ctx1: Context;
+          ctx2?: Context;
+          expected: boolean;
+        }[] = [
+          {
+            ctx1: new Context('/'),
+            ctx2: new Context('/'),
+            expected: true,
           },
-        };
-        await outlet.render(route, { path: '/foo' });
-        assert.notStrictEqual(host.querySelector('foo-bar'), null);
-      });
+          {
+            ctx1: new Context('/'),
+            ctx2: undefined,
+            expected: false,
+          },
+          {
+            ctx1: new Context('/'),
+            ctx2: new Context('/foo'),
+            expected: false,
+          },
+          {
+            ctx1: new Context('/?bar=baz'),
+            ctx2: new Context('/?bar=baz'),
+            expected: true,
+          },
+          {
+            ctx1: new Context('/?bar=baz'),
+            ctx2: new Context('/?bar=bar'),
+            expected: false,
+          },
+        ];
 
-      it('render promise template', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        const route = {
-          path: '/',
-          template: Promise.resolve('foo-bar'),
-        };
-        await outlet.render(route, { path: '/' });
-        assert.notStrictEqual(host.querySelector('foo-bar'), null);
-      });
-
-      it('set ctx property of template', async () => {
-        const host = document.createElement('div');
-        const outlet = new Outlet(host);
-        const el: HTMLElement & { ctx?: unknown } = document.createElement('foo-bar');
-        const route = {
-          path: '/',
-          template: el,
-        };
-        const ctx = { path: '/' };
-        await outlet.render(route, ctx);
-        assert.deepStrictEqual(el.ctx, ctx);
+        tests.forEach(tt => {
+          assert.strictEqual(tt.expected, tt.ctx1.equals(tt.ctx2));
+        });
       });
     });
   });
 
-  describe('Middlewares', () => {
-    describe('#push()', () => {
-      it('push middlewares', () => {
-        const m1 = () => Promise.resolve();
-        const m2 = () => Promise.resolve();
-        const middlewares = new Middlewares();
-        middlewares.push(m1, m2);
-        assert.strictEqual(middlewares.length, 2);
-        assert.strictEqual(middlewares.middlewares[0], m1);
-        assert.strictEqual(middlewares.middlewares[1], m2);
+  describe('DefaultOutlet', () => {
+    describe('constructor', () => {
+      it('create new outlet with marker', () => {
+        const el = document.createElement('div');
+        const outlet = new DefaultOutlet(el);
+        assert.strictEqual(el, outlet.el);
+        assert.strictEqual(true, el.innerHTML.includes('<!--marker-->'));
+      });
+    });
+
+    describe('#render()', () => {
+      it('render to element', async () => {
+        const el = document.createElement('div');
+        const outlet = new DefaultOutlet(el);
+        const foo = document.createElement('foo');
+        const bar = document.createElement('bar');
+        await outlet.render(foo);
+        assert.strictEqual(true, el.innerHTML.includes('<foo></foo>'));
+        assert.strictEqual(false, el.innerHTML.includes('<bar></bar>'));
+        await outlet.render(bar);
+        assert.strictEqual(false, el.innerHTML.includes('<foo></foo>'));
+        assert.strictEqual(true, el.innerHTML.includes('<bar></bar>'));
+      });
+
+      it('throw error if render non element', async () => {
+        const outlet = new DefaultOutlet(document.createElement('div'));
+        try {
+          await outlet.render({});
+          throw new Error('must error');
+        } catch (err) {
+          if (err instanceof Error) {
+            assert.strictEqual('fail to render non element', err.message);
+            return;
+          }
+          throw err;
+        }
+      });
+    });
+  });
+
+  describe('invokeMiddlewareChain()', () => {
+    it('invoke middleware chain', async () => {
+      function mw (id: number) {
+        return async (ctx: Context, next: () => Promise<void>) => {
+          (ctx.state as string[]).push(`pre-${id}`);
+          await next();
+          (ctx.state as string[]).push(`post-${id}`);
+        };
+      }
+      const middlewares = [mw(1), mw(2)];
+      const ctx = new Context('/', []);
+      await invokeMiddlewareChain(middlewares, ctx, (ctx) => {
+        (ctx.state as string[]).push('next');
+        return Promise.resolve();
+      });
+      assert.deepStrictEqual(['pre-1', 'pre-2', 'next', 'post-2', 'post-1'], ctx.state);
+    });
+  });
+
+  describe('Route', () => {
+    describe('constructor', () => {
+      it('create new route', () => {
+        const tests: {
+          route: string;
+          expectedPattern?: RegExp;
+          expectedArgs?: string[];
+        }[] = [
+          {
+            route: '/',
+            expectedPattern: undefined,
+            expectedArgs: undefined,
+          },
+          {
+            route: '/foo/{id}',
+            expectedPattern: /^\/foo\/([^\/]+)$/, // eslint-disable-line
+            expectedArgs: ['id'],
+          },
+          {
+            route: '/foo/{id}/bar[/{barId}]',
+            expectedPattern: /^\/foo\/([^\/]+)\/bar(?:\/([^\/]+))?$/, // eslint-disable-line
+            expectedArgs: ['id', 'barId'],
+          },
+        ];
+        tests.forEach(tt => {
+          const route = new Route(tt.route, emptyRouteFn);
+          assert.strictEqual(tt.expectedPattern + '', route.pattern + '');
+          assert.deepStrictEqual(tt.expectedArgs, route.args);
+        });
+      });
+
+      it('throw error if invalid path specified', () => {
+        assert.throw(() => new Route('/foo/[[', emptyRouteFn), 'invalid use of optional params');
+      });
+    });
+
+    describe('#test()', () => {
+      it('check if route eligible for context', () => {
+        const tests: {
+          route: string;
+          path: string;
+          expected: boolean;
+        }[] = [
+          {
+            route: '/foo',
+            path: '/foo',
+            expected: true,
+          },
+          {
+            route: '/foo',
+            path: '/bar',
+            expected: false,
+          },
+          {
+            route: '*',
+            path: '/foo',
+            expected: true,
+          },
+          {
+            route: '/foo/{id}',
+            path: '/foo/1',
+            expected: true,
+          },
+          {
+            route: '/foo/{id}',
+            path: '/foo/1/bar',
+            expected: false,
+          },
+        ];
+
+        tests.forEach(tt => {
+          const route = new Route(tt.route, emptyRouteFn);
+          const result = route.test(new Context(tt.path));
+          assert.strictEqual(tt.expected, result);
+        });
       });
     });
 
     describe('#invoke()', () => {
-      it('invoke all middlewares', async () => {
-        const logs: string[] = [];
-        const middlewares = new Middlewares();
-        middlewares.push(
-          async (_, next) => {
-            logs.push('m11');
-            await next();
-            logs.push('m12');
+      it('mixin context', () => {
+        const tests: {
+          ctx: Context;
+          route: string;
+          params: Record<string, string>;
+        }[] = [
+          {
+            ctx: new Context('/foo/foo-1/bar/bar-1'),
+            route: '/foo/{fooId}/bar/{id}',
+            params: { fooId: 'foo-1', id: 'bar-1' },
           },
-          async (_: unknown, next) => {
-            logs.push('m21');
-            await next();
-            logs.push('m22');
+          {
+            ctx: new Context('/'),
+            route: '/',
+            params: {},
           },
-        );
-        await middlewares.invoke({ path: '/' }, () => {
-          logs.push('next');
-          return Promise.resolve();
+        ];
+
+        tests.forEach(tt => {
+          const route = new Route(tt.route, emptyRouteFn);
+          route.invoke(tt.ctx);
+          assert.deepStrictEqual(tt.params, tt.ctx.params);
         });
-        assert.deepStrictEqual(logs, ['m11', 'm21', 'next', 'm22', 'm12']);
+      });
+
+      it('throw error if route not suitable for context', async () => {
+        try {
+          const route = new Route('/bar/{id}', emptyRouteFn);
+          await route.invoke(new Context('/foo/1'));
+          throw new Error('must throw');
+        } catch (err) {
+          if (err instanceof Error) {
+            assert.strictEqual('invalid route pattern', err.message);
+            return;
+          }
+          throw err;
+        }
+      });
+
+      it('return result with context', async () => {
+        const route = new Route('/', () => Promise.resolve(document.createElement('foo')));
+        const ctx = new Context('/');
+        const result = await route.invoke(ctx);
+        assert.strictEqual(ctx, (result as { ctx: unknown }).ctx);
       });
     });
   });
 
-  describe('Routes', () => {
-    describe('#push()', () => {
-      it('push routes', () => {
-        const routes = new Routes();
-        routes.push({ path: '/', template: 'x-home' }, { path: '/foo', template: 'x-foo' });
-        assert.strictEqual(routes.length, 2);
-        assert.strictEqual(routes.routes[0].path, '/');
-        assert.strictEqual(routes.routes[1].path, '/foo');
+  describe('getContextPath()', () => {
+    it('generate context path', () => {
+      const tests: {
+        location: URL;
+        mode: 'hash' | 'history';
+        basePath: string;
+        expected: string;
+      }[] = [
+        {
+          location: new URL('/?foo=bar', 'http://localhost'),
+          mode: 'history',
+          basePath: '/',
+          expected: '/?foo=bar',
+        },
+        {
+          location: new URL('/foo/bar', 'http://localhost'),
+          mode: 'history',
+          basePath: '/foo',
+          expected: '/bar',
+        },
+        {
+          location: new URL('/foo', 'http://localhost'),
+          mode: 'hash',
+          basePath: '/',
+          expected: '/',
+        },
+        {
+          location: new URL('#!/foo?bar=baz', 'http://localhost'),
+          mode: 'hash',
+          basePath: '/',
+          expected: '/foo?bar=baz',
+        },
+      ];
+      tests.forEach(tt => {
+        const result = getContextPath(tt.location, tt.mode, tt.basePath);
+        assert.strictEqual(tt.expected, result);
       });
     });
 
-    describe('#for()', () => {
-      const routes = new Routes();
-      const table: {
-        path: string,
-        template: string,
-        params?: Record<string, string>,
+    it('throw error if location not in basePath', () => {
+      assert.throw(() => {
+        getContextPath(new URL('/foo/bar', 'http://localhost'), 'history', '/bar');
+      }, 'invalid location');
+    });
+  });
+
+  describe('#getHistoryURL()', () => {
+    it('generate history url for push state or replace state', () => {
+      const tests: {
+        mode: 'hash' | 'history';
+        basePath: string;
+        path: string;
+        expected: string;
       }[] = [
-        { path: '/', template: 'x-home' },
-        { path: '/foo', template: 'x-foo' },
-        { path: '/bar/1', template: 'x-bar', params: { id: '1' } },
-        { path: '/bar/2', template: 'x-bar', params: { id: '2' } },
+        {
+          mode: 'hash',
+          basePath: '/',
+          path: '/',
+          expected: '#!/',
+        },
+        {
+          mode: 'hash',
+          basePath: '/',
+          path: '/foo',
+          expected: '#!/foo',
+        },
+        {
+          mode: 'hash',
+          basePath: '/',
+          path: '/foo?bar=baz',
+          expected: '#!/foo?bar=baz',
+        },
+        {
+          mode: 'history',
+          basePath: '/',
+          path: '/',
+          expected: '/',
+        },
+        {
+          mode: 'history',
+          basePath: '/',
+          path: '/foo?bar=baz',
+          expected: '/foo?bar=baz',
+        },
+        {
+          mode: 'history',
+          basePath: '/foo',
+          path: '/bar/baz',
+          expected: '/foo/bar/baz',
+        },
       ];
-
-      before(() => {
-        routes.push(
-          { path: '/', template: 'x-home' },
-          { path: '/foo', template: 'x-foo' },
-          { path: '/bar/{id}', template: 'x-bar' },
-        );
+      tests.forEach(tt => {
+        const u = getHistoryURL(tt.path, tt.mode, tt.basePath);
+        assert.strictEqual(tt.expected, u);
       });
-
-      for (const tt of table) {
-        it(`resolve route with path ${tt.path}`, () => {
-          const [route, ctx] = routes.forContext({ path: tt.path });
-          assert.strictEqual(ctx.path, tt.path);
-          assert.strictEqual(route.template, tt.template);
-          assert.deepStrictEqual(ctx.params, tt.params);
-        });
-      }
     });
   });
 
   describe('Router', () => {
     describe('constructor', () => {
-      it('create new router with default value', () => {
-        const r = new Router();
-        assert.strictEqual((<Outlet>r.outlet).host, document.body);
-        assert.strictEqual(r.basePath, '/');
-        assert.strictEqual(r.routes.length, 0);
-        assert.strictEqual(r.middlewares.length, 0);
-      });
-
-      it('create new router with specified outlet and options', () => {
-        const el = document.createElement('div');
-        const opts = {
-          basePath: '/x',
-          routes: [
-            { path: '/foo', template: 'x-foo' },
-            { path: '/bar', template: 'x-bar' },
-          ],
-          middlewares: [
-            () => Promise.resolve(),
-            () => Promise.resolve(),
-            () => Promise.resolve(),
-          ],
+      it('auto start', async () => {
+        const r = new Router(new MockOutlet(), mockOptions({ startsIn: 0 }));
+        let started = false;
+        r.start = () => {
+          started = true;
         };
-        const r = new Router(el, opts);
-        assert.strictEqual((<Outlet>r.outlet).host, el);
-        assert.strictEqual(r.basePath, '/x');
-        assert.strictEqual(r.routes.length, 2);
-        assert.strictEqual(r.middlewares.length, 3);
+        await sleep();
+        assert.strictEqual(true, started);
+      });
+    });
+
+    describe('#start()', () => {
+      it('add popstate and click listener', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        r.route('*', emptyRouteFn);
+        r.start();
+        assert.deepStrictEqual(['add:popstate:', 'add:click:'], (mock.window as MockWindow).logs);
+      });
+    });
+
+    describe('#stop()', () => {
+      it('remove popstate and click listener', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        r.stop();
+        assert.deepStrictEqual(['remove:popstate:', 'remove:click:'], (mock.window as MockWindow).logs);
       });
     });
 
     describe('#use()', () => {
       it('add middlewares', () => {
-        const r = new Router();
-        r.use(() => Promise.resolve(), () => Promise.resolve());
-        assert.strictEqual(r.middlewares.length, 2);
+        const r = new Router(new MockOutlet(), mockOptions());
+        const retval = r.use(() => Promise.resolve());
+        assert.strictEqual(r.middlewares.length, 1);
+        assert.strictEqual(r, retval);
       });
     });
 
     describe('#route()', () => {
       it('add routes', () => {
-        const r = new Router();
-        r.route(
-          { path: '/foo', template: 'x-foo' },
-          { path: '/bar', template: 'x-bar' },
-        );
-        assert.strictEqual(r.routes.length, 2);
+        const r = new Router(new MockOutlet(), mockOptions());
+        const retval = r.route('/foo', emptyRouteFn);
+        assert.strictEqual(r.routes.length, 1);
+        assert.strictEqual(r, retval);
       });
     });
 
     describe('#dispatch()', () => {
-      it('return false on invalid prefix', async () => {
-        const outlet = document.createElement('div');
-        const r = new Router(outlet, { basePath: '/foo' });
-        const result = await r.dispatch({ path: '/bar' });
-        assert.strictEqual(result, false);
+      it('set ctx', async () => {
+        const r = new Router(new MockOutlet(), mockOptions());
+        r.route('/', emptyRouteFn);
+        const ctx = new Context('/');
+        await r.dispatch(ctx);
+        assert.strictEqual(ctx, r.ctx);
       });
 
-      it('throw error if route is not resolved', async () => {
-        const r = new Router(document.createElement('div'));
+      it('invoke middleware', async () => {
+        const logs = [];
+        const r = new Router(new MockOutlet(), mockOptions());
+        r.use(async (_, next) => {
+          logs.push(1);
+          await next();
+        });
+        r.route('/', emptyRouteFn);
+        await r.dispatch(new Context('/'));
+        assert.strictEqual(1, logs.length);
+        await r.dispatch(new Context('/'));
+        assert.strictEqual(1, logs.length);
+      });
+
+      it('throw error if route not found', async () => {
+        const r = new Router(new MockOutlet(), mockOptions());
         try {
-          await r.dispatch({ path: '/' });
-          throw new Error('must throw err');
+          await r.dispatch(new Context('/'));
+          throw new Error('must error');
         } catch (err) {
-          if (!(err instanceof Error)) {
-            throw err;
+          if (err instanceof Error) {
+            if (err.message === 'route not found') {
+              return;
+            }
           }
-          if (err.message === 'must throw err') {
-            throw err;
-          }
-          assert.strictEqual(err.message, 'route not found');
+          throw err;
         }
       });
 
-      it('invoke middlewares, resolve route and render outlet', async () => {
-        const logs: string[] = [];
-        const r = new Router(document.createElement('div'), {
-          middlewares: [
-            async (_, next) => {
-              logs.push('m1');
-              await next();
-              logs.push('m2');
-            },
-            async (_, next) => {
-              logs.push('n1');
-              await next();
-              logs.push('n2');
-            },
-          ],
-          routes: [
-            { path: '/', template: 'x-home' },
-          ],
-        });
-        r.outlet = {
-          render (route, ctx) {
-            assert.strictEqual(route.template, 'x-home');
-            assert.strictEqual(ctx.path, '/');
-            return Promise.resolve();
-          },
+      it('render to outlet if route return value', async () => {
+        const fn = () => {
+          return Promise.resolve(document.createElement('foo'));
         };
-        const result = await r.dispatch({ path: '/' });
-        assert.strictEqual(result, true);
-        assert.deepStrictEqual(logs, ['m1', 'n1', 'n2', 'm2']);
+        const el = document.createElement('div');
+        const r = new Router(el, mockOptions()).route('/', fn);
+        await r.dispatch(new Context('/'));
+        assert.strictEqual(true, el.innerHTML.includes('<foo></foo>'));
       });
     });
 
-    describe('#listen()', () => {
-      it('add to dispatchers', () => {
-        configure();
-        const r = new Router(document.createElement('div:w'));
-        r.route({ path: '*', template: 'foo' });
-        r.listen();
-        assert.strictEqual(inspect()?.dispatchers.length, 1);
+    describe('#popstateListener()', () => {
+      it('dispatch context', () => {
+        const r = new Router(new MockOutlet(), mockOptions({
+          mode: 'hash',
+          basePath: '/',
+          location: new URL('/#!/foo', 'http://localhost'),
+        }));
+        const evt = new PopStateEvent('popstate', { state: 'bar' });
+        let dispatchCtx: Context;
+        r.dispatch = (ctx) => {
+          dispatchCtx = ctx;
+          return Promise.resolve();
+        };
+        r.popstateListener(evt);
+        assert.strictEqual('/foo', dispatchCtx.path);
+        assert.strictEqual('bar', dispatchCtx.state);
       });
     });
 
-    describe('#unlisten()', () => {
-      it('remove from dispatchers', () => {
-        configure();
-        const r = new Router();
-        inspect()?.dispatchers.push(r);
-        r.unlisten();
-        assert.strictEqual(inspect()?.dispatchers.length, 0);
+    describe('#clickListener()', () => {
+      it('propagate if target is not link', async () => {
+        const root: HTMLElement = await fixture(html`<root><target><child></child></target></root>`);
+        let invoked = false;
+        root.addEventListener('click', (evt) => {
+          assert.strictEqual(false, evt.defaultPrevented);
+          evt.preventDefault();
+          invoked = true;
+        });
+        const mock = mockOptions({
+          window: root.querySelector('target'),
+        });
+        const r = new Router(new MockOutlet(), mock);
+        r.route('*', emptyRouteFn);
+        r.start();
+        (root.querySelector('child') as HTMLElement).click();
+        assert.strictEqual(true, invoked);
+        r.stop();
+      });
+
+      it('push state and dispatch', async () => {
+        const root: HTMLElement = await fixture(html`<root><target><a href="/foo?bar=baz"></a></target></root>`);
+        let invoked = false;
+        root.addEventListener('click', (evt) => {
+          evt.preventDefault();
+          invoked = true;
+        });
+        const mock = mockOptions({
+          window: root.querySelector('target'),
+        });
+        const r = new Router(new MockOutlet(), mock);
+        let dispatchedCtx: Context;
+        r.dispatch = (ctx) => {
+          dispatchedCtx = ctx;
+          return Promise.resolve();
+        };
+        r.start();
+        (root.querySelector('a') as HTMLElement).click();
+        assert.strictEqual(false, invoked);
+        assert.strictEqual('/foo', dispatchedCtx.path);
+        assert.deepStrictEqual({ bar: 'baz' }, dispatchedCtx.query);
+        r.stop();
+      });
+    });
+
+    describe('#push()', () => {
+      it('push state and dispatch', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        let dispatchCtx: Context;
+        r.dispatch = (ctx) => {
+          dispatchCtx = ctx;
+          return Promise.resolve();
+        };
+        r.push('/foo', 'bar');
+        assert.strictEqual('/foo', dispatchCtx.path);
+        assert.strictEqual('push:/foo:bar', (mock.history as MockHistory).logs[0]);
+      });
+    });
+
+    describe('#replace()', () => {
+      it('replace state and dispatch', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        let dispatchCtx: Context;
+        r.dispatch = (ctx) => {
+          dispatchCtx = ctx;
+          return Promise.resolve();
+        };
+        r.replace('/foo', 'bar');
+        assert.strictEqual('/foo', dispatchCtx.path);
+        assert.strictEqual('replace:/foo:bar', (mock.history as MockHistory).logs[0]);
+      });
+    });
+
+    describe('#go()', () => {
+      it('invoke history go', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        r.go(123);
+        assert.strictEqual('go:123', (mock.history as MockHistory).logs[0]);
+      });
+    });
+
+    describe('#pop()', () => {
+      it('invoke history go', () => {
+        const mock = mockOptions();
+        const r = new Router(new MockOutlet(), mock);
+        r.pop();
+        assert.strictEqual('go:-1', (mock.history as MockHistory).logs[0]);
       });
     });
   });
 
-  describe('@router()', () => {
-    it('define base path, routes, and middlewares from options', async () => {
-      const options = {
-        basePath: '/foo',
-        routes: [
-          { path: '/', template: 'x-home' },
-        ],
-        middlewares: [
-          () => Promise.resolve(),
-        ],
-      };
-      class XRouter extends router(options)(HTMLElement) {}
-      customElements.define('x-router-1', XRouter);
-      const el: XRouter = await fixture(html`
-        <x-router-1></x-router-1>
+  describe('template()', () => {
+    it('return element if invoked', async () => {
+      const tpl: HTMLTemplateElement = await fixture(html`
+        <template id="tpl">
+          <foo>foo</foo>
+          <bar>bar</bar>
+        </template>
       `);
-      await el.routerReady;
-      assert.strictEqual((el.router?.outlet as Outlet).host, el);
-      assert.strictEqual(el.router?.basePath, '/foo');
-      assert.strictEqual(el.router?.routes.length, 1);
-      assert.strictEqual(el.router?.middlewares.length, 1);
+      const fn = template(tpl);
+      const result = await fn(new Context('/'));
+      assert.strictEqual('<foo>foo</foo>', (<unknown>result as HTMLElement).outerHTML);
     });
+  });
 
-    it('define outlet, routes and middlewares from children', async () => {
-      const mw = () => Promise.resolve();
-      const el: RouterElement = await fixture(html`
-        <xlit-router>
-          <div>
-            <div outlet id="outlet"></div>
-          </div>
-          <template route path="/" template="x-foo"></template>
-          <template route path="/bar">
-            <x-bar></x-bar>
-          </template>
-          <x-m middleware .callback="${mw}"></x-m>
-          <div class="excluded">
-            <template route path="/foo" template="x-foo-excluded"></template>
-            ,<x-m middleware .callback="${mw}"></x-m>
-          </div>
-        </xlit-router>
-      `);
-      await el.routerReady;
-      assert.strictEqual((el.router?.outlet as Outlet).host, el.querySelector('#outlet'));
-      assert.strictEqual(el.router?.routes.length, 2);
-      assert.strictEqual(el.router?.middlewares.length, 1);
+  describe('component()', () => {
+    it('return element if invoked', async () => {
+      let loaded = false;
+      function load () {
+        loaded = true;
+        return Promise.resolve();
+      }
+      const fn = component('x-foo', load);
+      const result = await fn(new Context('/'));
+      assert.strictEqual('<x-foo></x-foo>', (<unknown>result as HTMLElement).outerHTML);
+      assert.strictEqual(true, loaded);
     });
   });
 });
 
-function waitFor (target: EventTarget, name: string, timeoutLength = 500): Promise<Event> {
-  return new Promise<Event>((resolve, reject) => {
-    function clean () {
-      clearTimeout(t);
-      target.removeEventListener(name, handle);
-    }
-    const t = setTimeout(() => {
-      clean();
-      reject(new Error(`wait for event '${name}' got timeout`));
-    }, timeoutLength);
-    const handle = (evt: Event) => {
-      clean();
-      resolve(evt);
-    };
-    target.addEventListener(name, handle);
-  });
+const emptyRouteFn = () => Promise.resolve();
+
+class MockWindow {
+  logs: string[] = [];
+
+  addEventListener (name: string, listener: EventListener) {
+    this.logs.push('add:' + name + ':' + listener.name);
+  }
+
+  removeEventListener (name: string, listener: EventListener) {
+    this.logs.push('remove:' + name + ':' + listener.name);
+  }
+}
+
+class MockHistory {
+  logs: string[] = [];
+
+  go (delta: number) {
+    this.logs.push(`go:${delta}`);
+  }
+
+  pushState (state: unknown, _: string, path: string) {
+    this.logs.push(`push:${path}:${state}`);
+  }
+
+  replaceState (state: unknown, _: string, path: string) {
+    this.logs.push(`replace:${path}:${state}`);
+  }
+}
+
+class MockOutlet {
+  result: unknown;
+
+  render (result: unknown) {
+    this.result = result;
+    return Promise.resolve();
+  }
+}
+
+function mockOptions (opts?: Partial<RouterOptions>): RouterOptions {
+  return {
+    mode: 'history',
+    basePath: '/',
+    startsIn: -1,
+    window: new MockWindow(),
+    history: new MockHistory(),
+    location: {
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
+    ...opts,
+  };
+}
+
+function sleep (n = 0): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, n));
 }

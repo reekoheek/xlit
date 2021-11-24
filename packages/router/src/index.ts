@@ -1,30 +1,157 @@
-type Mode = 'history' | 'hash'
-
-export interface Context {
+export class Context {
   readonly path: string;
-  readonly query?: Record<string, string>;
-  readonly params?: Record<string, string>;
+  readonly query: Record<string, string> = {};
+  readonly params: Record<string, string> = {};
   readonly state?: unknown;
-}
 
-interface WithContext {
-  ctx?: Context;
-}
+  constructor (path: string, state?: unknown) {
+    const url = new URL(path, 'http://localhost');
+    url.searchParams.forEach((v, k) => (this.query[k] = v));
 
-function compareContext (ctx1: Context, ctx2: Context): boolean {
-  if (ctx1.path !== ctx2.path) {
-    return false;
+    this.path = url.pathname;
+    this.state = state;
   }
-  const q1 = ctx1.query || {};
-  const q2 = ctx2.query || {};
-  const s = new Set([...Object.keys(q1), ...Object.keys(q2)]);
-  for (const k of s) {
-    if (q1[k] !== q2[k]) {
+
+  equals (ctx?: Context): boolean {
+    if (!ctx) {
       return false;
     }
+    if (this.path !== ctx.path) {
+      return false;
+    }
+    const q1 = this.query;
+    const q2 = ctx.query;
+    const s = new Set([...Object.keys(q1), ...Object.keys(q2)]);
+    for (const k of s) {
+      if (q1[k] !== q2[k]) {
+        return false;
+      }
+    }
+    return true;
   }
-  return true;
 }
+
+interface Result {
+  ctx: Context;
+}
+
+interface Outlet {
+  render(result: unknown): Promise<void>;
+}
+
+type OutletOption = Outlet | Element;
+
+export class DefaultOutlet {
+  readonly el: Element;
+  readonly marker: Comment;
+
+  constructor (el: Element) {
+    this.el = el;
+    this.marker = document.createComment('marker');
+    el.appendChild(this.marker);
+  }
+
+  async render (result: unknown): Promise<void> {
+    if (result instanceof Element === false) {
+      throw new Error('fail to render non element');
+    }
+    const el = result as Element;
+    const promises = [];
+    while (this.marker.nextSibling) {
+      promises.push(this.el.removeChild(this.marker.nextSibling));
+    }
+    promises.push(this.el.appendChild(el));
+    await Promise.all(promises);
+  }
+}
+
+interface Next {
+  (ctx?: Context): Promise<void>;
+}
+
+interface Middleware {
+  (ctx: Context, next: Next): Promise<void>;
+}
+
+export function invokeMiddlewareChain (middlewares: Middleware[], ctx: Context, next: Next): Promise<void> {
+  // let index = -1;
+  const dispatch = (i: number): Promise<void> => {
+    // if (i <= index) throw new Error('next() called multiple times');
+    // index = i;
+    const fn = i === middlewares.length ? next : middlewares[i];
+    return fn(ctx, () => dispatch(i + 1));
+  };
+  return dispatch(0);
+}
+
+interface RouteFn {
+  (ctx: Context): Promise<unknown | void>;
+}
+
+export class Route {
+  readonly path: string;
+  readonly fn: RouteFn;
+  readonly pattern?: RegExp;
+  readonly args?: string[];
+
+  constructor (path: string, fn: RouteFn) {
+    this.path = path;
+    this.fn = fn;
+
+    if (!path.match(/[[{]/)) {
+      return;
+    }
+
+    const chunks = path.split('[');
+    if (chunks.length > 2) {
+      throw new Error('invalid use of optional params');
+    }
+
+    const args: string[] = [];
+    const re = chunks[0].replace(/{([^}]+)}/g, function (_, token) {
+      args.push(token);
+      return '([^/]+)';
+    }).replace(/\//g, '\\/');
+
+    let optRe = '';
+    if (chunks[1]) {
+      optRe = '(?:' + chunks[1].slice(0, -1).replace(/{([^}]+)}/g, (_, token) => {
+        const [realToken, re = '[^/]+'] = token.split(':');
+        args.push(realToken);
+        return `(${re})`;
+      }).replace(/\//g, '\\/') + ')?';
+    }
+
+    this.pattern = new RegExp('^' + re + optRe + '$');
+    this.args = args;
+  }
+
+  test (ctx: Context): boolean {
+    if (this.pattern) {
+      return Boolean(ctx.path.match(this.pattern));
+    }
+    return this.path === '*' || this.path === ctx.path;
+  }
+
+  async invoke (ctx: Context): Promise<Result | void> {
+    if (this.pattern) {
+      const matched = ctx.path.match(this.pattern);
+      if (!matched) {
+        throw new Error('invalid route pattern');
+      }
+      this.args?.forEach((arg, i) => (ctx.params[arg] = matched[i + 1]));
+    }
+
+    const el = await this.fn(ctx);
+    if (el) {
+      const result = <unknown>el as Result;
+      result.ctx = ctx;
+      return result;
+    }
+  }
+}
+
+type Mode = 'history' | 'hash'
 
 interface Location {
   readonly pathname: string,
@@ -32,678 +159,179 @@ interface Location {
   readonly hash: string,
 }
 
-type DOMTemplate = HTMLElement | DocumentFragment;
-type TagTemplate = string;
-type BasicTemplate = DOMTemplate | TagTemplate;
-
-interface FunctionTemplate {
-  (ctx: Context): Promise<BasicTemplate>;
+interface Window {
+  addEventListener(name: string, listener: EventListener): void;
+  removeEventListener(name: string, listener: EventListener): void;
 }
 
-type Template = BasicTemplate | FunctionTemplate | Promise<BasicTemplate>;
-
-interface WithTemplate {
-  readonly template: Template;
+interface History {
+  go(delta?: number): void;
+  pushState(data: unknown, unused: string, url: string): void;
+  replaceState(data: unknown, unused: string, url: string): void;
 }
 
-interface RouteDef extends WithTemplate {
-  readonly path: string;
-}
-
-interface Route extends RouteDef {
-  readonly pattern?: RegExp;
-  readonly args?: string[];
-}
-
-export interface NextFn {
-  (): Promise<void>;
-}
-
-export interface Middleware {
-  (ctx: Context, next: NextFn): Promise<void>;
-}
-
-interface WithMiddlewareCallback {
-  readonly callback: Middleware;
-}
-
-interface Constructor<T> {
-  new (...args: any[]): T; // eslint-disable-line @typescript-eslint/no-explicit-any
-}
-
-interface CustomeElement extends HTMLElement {
-  connectedCallback?(): void;
-  disconnectedCallback?(): void;
-}
-
-interface Options {
-  readonly basePath: string;
-  readonly middlewares: Middleware[];
-  readonly routes: RouteDef[];
-}
-
-interface MixinOptions extends Options {
-  readonly listen: boolean;
-}
-
-interface Dispatcher {
-  dispatch (ctx: Context): Promise<boolean>;
-}
-
-interface IOutlet {
-  render (route: Route, ctx: Context): Promise<void>;
-}
-
-interface RouteResolver {
-  (el: Element): Route;
-}
-
-interface MiddlewareResolver {
-  (el: Element): Middleware;
-}
-
-interface Config {
+export interface RouterOptions {
   readonly mode: Mode;
-  readonly delay: number;
-  readonly routeResolver: RouteResolver;
-  readonly middlewareResolver: MiddlewareResolver;
+  readonly basePath: string;
+  readonly window: Window;
+  readonly history: History;
+  readonly location: Location;
+  readonly startsIn: number;
 }
 
-interface Debug {
-  popStateEventListener?: EventListener;
-  clickEventListener?: EventListener;
-  routerDispatchEventListener?: EventListener;
-}
-
-interface State {
-  config: Config;
-  ctx: Context;
-  dispatchers: Dispatcher[];
-}
-
-let globalDebug: Debug | undefined;
-let globalState: State | undefined;
-
-function fireEvent (ctx: Context) {
-  const evt = new CustomEvent<Context>('router-dispatch', {
-    detail: ctx,
-  });
-  window.dispatchEvent(evt);
-}
-
-function handlePopState (evt: PopStateEvent) {
-  if (globalDebug?.popStateEventListener) {
-    globalDebug.popStateEventListener(evt);
-    return;
-  }
-  try {
-    const parsed = parseLocation(location, getState().config.mode);
-    const ctx = { ...parsed, state: evt.state };
-    fireEvent(ctx);
-  } catch (err) {
-    console.error('unhandled popstate err', err);
-  }
-}
-
-function handleClick (evt: Event) {
-  if (globalDebug?.clickEventListener) {
-    globalDebug.clickEventListener(evt);
-    return;
-  }
-  try {
-    if (evt.target instanceof Element === false) {
-      return;
+export function getContextPath ({ pathname, search, hash }: Location, mode: Mode, basePath: string): string {
+  if (mode === 'history') {
+    const path = decodeURI(pathname + search);
+    if (!path.startsWith(basePath)) {
+      throw new Error('invalid location');
     }
+    return '/' + path.substr(basePath.length).replace(/\/+$/, '').replace(/^\/+/, '');
+  }
+  const match = hash.match(/#!(.*)/);
+  if (match && match[1]) {
+    return '/' + match[1].replace(/\/+$/, '').replace(/^\/+/, '');
+  }
+  return '/';
+}
+
+export function getHistoryURL (path: string, mode: Mode, basePath: string): string {
+  if (mode === 'hash') {
+    return '#!' + path;
+  }
+
+  const prefix = basePath === '/' ? '/' : basePath + '/';
+  return prefix + path.replace(/\/+$/, '').replace(/^\/+/, '');
+}
+
+export class Router {
+  readonly outlet: Outlet;
+  readonly routes: Route[] = [];
+  readonly middlewares: Middleware[] = [];
+  readonly mode: Mode;
+  readonly basePath: string;
+  readonly window: Window;
+  readonly history: History;
+  readonly location: Location;
+  ctx?: Context;
+
+  popstateListener: EventListener = (evt) => {
+    const path = getContextPath(this.location, this.mode, this.basePath);
+    this.dispatch(new Context(path, (evt as PopStateEvent).state));
+  }
+
+  clickListener: EventListener = (evt) => {
     const target = (evt.target as Element).closest('a');
     if (!target) {
       return;
     }
-
     evt.preventDefault();
-    const parsed = parseLocation(target, getState().config.mode);
-    history.pushState(null, '', target.href);
-    const ctx = { ...parsed };
-    fireEvent(ctx);
-  } catch (err) {
-    console.error('unhandled click err', err);
+    evt.stopImmediatePropagation();
+    const path = getContextPath(target, this.mode, this.basePath);
+    const ctx = new Context(path);
+    this.history.pushState(undefined, '', target.href);
+    this.dispatch(ctx);
   }
-}
 
-function handleRouterDispatch (evt: CustomEvent<Context>) {
-  if (globalDebug?.routerDispatchEventListener) {
-    globalDebug.routerDispatchEventListener(evt);
-    return;
+  constructor (outlet: OutletOption, opts: Partial<RouterOptions> = {}) {
+    this.outlet = this.createOutlet(outlet);
+    this.mode = opts.mode ?? 'history';
+    this.basePath = opts.basePath ?? '/';
+    this.window = opts.window ?? window;
+    this.history = opts.history ?? history;
+    this.location = opts.location ?? location;
+
+    const startsIn = opts.startsIn ?? 0;
+    if (startsIn >= 0) {
+      setTimeout(() => this.start(), startsIn);
+    }
   }
-  try {
-    const ctx = evt.detail;
-    const state = getState();
-    const eq = compareContext(ctx, state.ctx);
-    if (eq) {
+
+  createOutlet (outlet: OutletOption): Outlet {
+    if ('render' in outlet) {
+      return outlet;
+    }
+    return new DefaultOutlet(outlet);
+  }
+
+  start (): void {
+    this.window.addEventListener('popstate', this.popstateListener);
+    this.window.addEventListener('click', this.clickListener);
+    const ctx = new Context(getContextPath(this.location, this.mode, this.basePath));
+    this.dispatch(ctx);
+  }
+
+  stop (): void {
+    this.window.removeEventListener('popstate', this.popstateListener);
+    this.window.removeEventListener('click', this.clickListener);
+  }
+
+  use (middleware: Middleware): Router {
+    this.middlewares.push(middleware);
+    return this;
+  }
+
+  route (path: string, fn: RouteFn): Router {
+    this.routes.push(new Route(path, fn));
+    return this;
+  }
+
+  async dispatch (ctx: Context): Promise<void> {
+    if (this.ctx?.equals(ctx)) {
       return;
     }
-    state.ctx = ctx;
-    state.dispatchers.forEach(dispatcher => tryDispatch(dispatcher, ctx));
-  } catch (err) {
-    console.error('unhandled router-dispatch err', err);
-  }
-}
 
-async function tryDispatch (dispatcher: Dispatcher, ctx: Context) {
-  try {
-    const dispatched = await dispatcher.dispatch(ctx);
-    if (!dispatched && globalDebug) {
-      console.warn('skip dispatching...');
-    }
-  } catch (err) {
-    console.error('dispatch err', err);
-  }
-}
-
-function addDispatcher (dispatcher: Dispatcher) {
-  const { dispatchers } = getState();
-  const index = dispatchers.indexOf(dispatcher);
-  if (index !== -1) {
-    return;
-  }
-  dispatchers.push(dispatcher);
-}
-
-function removeDispatcher (dispatcher: Dispatcher) {
-  const { dispatchers } = getState();
-  const index = dispatchers.indexOf(dispatcher);
-  if (index !== -1) {
-    dispatchers.splice(index, 1);
-  }
-}
-
-export function push (uri: string, state?: unknown): Promise<void> {
-  history.pushState(state, '', toURLString(uri, getState().config.mode));
-  fireEvent({ ...parseURI(uri), state });
-  return Promise.resolve();
-}
-
-export function replace (uri: string, state?: unknown): Promise<void> {
-  history.replaceState(state, '', toURLString(uri, getState().config.mode));
-  fireEvent({ ...parseURI(uri), state });
-  return Promise.resolve();
-}
-
-export async function go (delta: number): Promise<void> {
-  const triggered = waitFor(window, 'popstate');
-  history.go(delta);
-  await triggered;
-  return Promise.resolve();
-}
-
-export async function pop (): Promise<void> {
-  await go(-1);
-}
-
-export function debug (debug?: Partial<Debug> | boolean): Debug | undefined {
-  if (debug === true) {
-    globalDebug = {};
-  } else if (debug === false) {
-    globalDebug = undefined;
-  } else if (debug) {
-    globalDebug = { ...globalDebug, ...debug };
-  }
-  return globalDebug;
-}
-
-function initState (): State {
-  globalState = {
-    config: {
-      mode: 'history',
-      delay: 0,
-      routeResolver: defaultRouteResolver,
-      middlewareResolver: defaultMiddlewareResolver,
-    },
-    ctx: { path: '/' },
-    dispatchers: [],
-  };
-  window.addEventListener('popstate', handlePopState);
-  window.addEventListener('click', handleClick);
-  window.addEventListener('router-dispatch', handleRouterDispatch);
-  return globalState;
-}
-
-function uninitState () {
-  if (!globalState) {
-    return;
-  }
-  globalState = undefined;
-  window.removeEventListener('popstate', handlePopState);
-  window.removeEventListener('click', handleClick);
-  window.removeEventListener('router-dispatch', handleRouterDispatch);
-}
-
-function getState (): State {
-  if (globalState) {
-    return globalState;
-  }
-  throw new Error('uninitialized router global state');
-}
-
-export function inspect (): State | undefined {
-  if (!globalDebug) {
-    throw new Error('disable inspect without debug');
-  }
-  return globalState;
-}
-
-export function configure (config: Partial<Config> = {}): void {
-  if (!globalState) {
-    globalState = initState();
-  }
-  const state = globalState;
-  state.config = {
-    ...state.config,
-    ...config,
-  };
-  state.ctx = parseLocation(location, state.config.mode);
-}
-
-export function reset (): void {
-  uninitState();
-}
-
-function toURLString (uri: string, mode: Mode): string {
-  return mode === 'hash' ? '#!' + uri : '/' + uri.replace(/\/+$/, '').replace(/^\/+/, '');
-}
-
-function parseURL ({ pathname, searchParams }: URL): Context {
-  const query: Record<string, string> = {};
-  searchParams.forEach((v, k) => (query[k] = v));
-  return { path: pathname, query };
-}
-
-function parseURI (uri: string): Context {
-  return parseURL(new URL(uri, 'http://localhost'));
-}
-
-function parseLocation (location: Location, mode: Mode): Context {
-  let uri = '';
-  if (mode === 'history') {
-    uri += decodeURI(location.pathname + location.search);
-  } else {
-    const match = location.hash.match(/#!(.*)/);
-    if (match && match[1]) {
-      uri += match[1];
-    }
-  }
-  uri = '/' + uri.replace(/\/+$/, '').replace(/^\/+/, '');
-  return parseURI(uri);
-}
-
-function toRoute (route: RouteDef): Route {
-  if (!isVary(route.path)) {
-    return { ...route };
-  }
-  return {
-    ...route,
-    ...parseRegExp(route.path),
-  };
-}
-
-function parseRegExp (str: string) {
-  const chunks = str.split('[');
-  if (chunks.length > 2) {
-    throw new Error('Invalid use of optional params');
-  }
-  const args: string[] = [];
-  const re = chunks[0].replace(/{([^}]+)}/g, function (_, token) {
-    args.push(token);
-    return '([^/]+)';
-  }).replace(/\//g, '\\/');
-  let optRe = '';
-  if (chunks[1]) {
-    optRe = '(?:' + chunks[1].slice(0, -1).replace(/{([^}]+)}/g, function (_, token) {
-      const [realToken, re = '[^/]+'] = token.split(':');
-      args.push(realToken);
-      return `(${re})`;
-    }).replace(/\//g, '\\/') + ')?';
-  }
-  return { pattern: new RegExp('^' + re + optRe + '$'), args };
-}
-
-function isVary (path: string) {
-  return path.match(/[[{]/);
-}
-
-export class Middlewares {
-  middlewares: Middleware[] = [];
-
-  get length (): number {
-    return this.middlewares.length;
-  }
-
-  push (...middlewares: Middleware[]): void {
-    this.middlewares.push(...middlewares);
-  }
-
-  invoke (ctx: Context, next: NextFn): Promise<void> {
-    const middlewares = this.middlewares;
-    let index = -1;
-    const dispatch = (i: number): Promise<void> => {
-      if (i <= index) {
-        throw new Error('next() called multiple times');
+    await invokeMiddlewareChain(this.middlewares, ctx, async () => {
+      const route = this.routes.find(r => r.test(ctx));
+      if (!route) {
+        throw new Error('route not found');
       }
-      index = i;
-      const fn = i === middlewares.length ? next : middlewares[i];
-      return fn(ctx, () => dispatch(i + 1));
-    };
-    return dispatch(0);
-  }
-}
 
-function toOptions ({
-  basePath = '/',
-  middlewares = [],
-  routes = [],
-}: Partial<Options> = {}): Options {
-  return { basePath, middlewares, routes };
-}
+      this.ctx = ctx;
 
-async function resolveTemplate (route: Route, ctx: Context): Promise<DOMTemplate> {
-  let template = route.template;
-  if (route.template instanceof Promise) {
-    template = await route.template;
-  }
-  if (typeof route.template === 'function') {
-    template = await route.template(ctx);
-  }
-  if (template instanceof HTMLElement) {
-    return template;
-  }
-  if (template instanceof DocumentFragment) {
-    return document.importNode(template, true);
-  }
-  if (typeof template === 'string') {
-    return document.createElement(template);
-  }
-  throw new Error('unimplemented template');
-}
-
-function createContextWithSegmentParams (ctx: Context, route: Route): Context {
-  if (!route.pattern) {
-    throw new Error('invalid route pattern');
-  }
-  const result = ctx.path.match(route.pattern);
-  if (!result) {
-    throw new Error('invalid route pattern');
-  }
-  return {
-    ...ctx,
-    params: (route.args ?? []).reduce((params: Record<string, string>, name: string, index: number) => {
-      params[name] = result[index + 1];
-      return params;
-    }, {}),
-  };
-}
-
-export class Routes {
-  routes: Route[] = [];
-
-  get length (): number {
-    return this.routes.length;
-  }
-
-  push (...routes: RouteDef[]): void {
-    routes.forEach(r => this.routes.push(toRoute(r)));
-  }
-
-  forContext (ctx: Context): [Route, Context] {
-    const route = this.routes.find(r => r.pattern
-      ? ctx.path.match(r.pattern)
-      : (r.path === '*' || r.path === ctx.path));
-    if (!route) {
-      throw new Error('route not found');
-    }
-    if (route.pattern) {
-      ctx = createContextWithSegmentParams(ctx, route);
-    }
-    return [route, ctx];
-  }
-}
-
-export class Outlet implements IOutlet {
-  host: Element;
-  marker: Comment;
-
-  constructor (host: Element) {
-    this.host = host;
-    this.marker = document.createComment('');
-    this.host.appendChild(this.marker);
-  }
-
-  async render (route: Route, ctx: Context): Promise<void> {
-    const template = await resolveTemplate(route, ctx);
-    (<WithContext>template).ctx = ctx;
-    while (this.marker.nextSibling) {
-      this.host.removeChild(this.marker.nextSibling);
-    }
-    this.host.appendChild(template);
-  }
-}
-
-function createPrefixRemovedContext (ctx: Context, prefix: string): Context {
-  return { ...ctx, path: '/' + ctx.path.substr(prefix.length).replace(/^\/+/, '') };
-}
-
-export class Router implements Dispatcher {
-  outlet: IOutlet;
-  basePath: string;
-  routes = new Routes();
-  middlewares = new Middlewares();
-
-  constructor (outlet: Element = document.body, opts?: Partial<Options>) {
-    const { basePath, routes, middlewares } = toOptions(opts);
-    this.outlet = new Outlet(outlet);
-    this.basePath = basePath;
-    this.use(...middlewares);
-    this.route(...routes);
-  }
-
-  async listen (): Promise<void> {
-    if (!globalState) {
-      configure();
-    }
-    addDispatcher(this);
-    const { ctx } = getState();
-    await this.dispatch(ctx);
-  }
-
-  unlisten (): void {
-    if (!globalState) {
-      return;
-    }
-    removeDispatcher(this);
-  }
-
-  use (...middlewares: Middleware[]): Router {
-    this.middlewares.push(...middlewares);
-    return this;
-  }
-
-  route (...routes: RouteDef[]): Router {
-    this.routes.push(...routes);
-    return this;
-  }
-
-  async dispatch (ctx: Context): Promise<boolean> {
-    if (!ctx.path.startsWith(this.basePath)) {
-      return false;
-    }
-    ctx = createPrefixRemovedContext(ctx, this.basePath);
-    await this.middlewares.invoke(ctx, async () => {
-      await this.outlet.render(...this.routes.forContext(ctx));
+      const result = await route.invoke(ctx);
+      if (result) {
+        await this.outlet.render(result);
+      }
     });
-    return true;
+  }
+
+  push (path: string, state?: unknown): void {
+    const ctx = new Context(path, state);
+    this.history.pushState(state, '', getHistoryURL(path, this.mode, this.basePath));
+    this.dispatch(ctx);
+  }
+
+  replace (path: string, state?: unknown): void {
+    const ctx = new Context(path, state);
+    this.history.replaceState(state, '', getHistoryURL(path, this.mode, this.basePath));
+    this.dispatch(ctx);
+  }
+
+  go (delta: number): void {
+    this.history.go(delta);
+  }
+
+  pop (): void {
+    this.go(-1);
   }
 }
 
-function findRoutesAndMiddlewares (root: Element | DocumentFragment): [ RouteDef[], Middleware[] ] {
-  const { routeResolver, middlewareResolver } = getState().config;
-  const routes: RouteDef[] = [];
-  const mws: Middleware[] = [];
-  let child = root.firstElementChild;
-  while (child) {
-    if (child.hasAttribute('route')) {
-      routes.push(routeResolver(child));
-    }
-
-    if (child.hasAttribute('middleware')) {
-      mws.push(middlewareResolver(child));
-    }
-    child = child.nextElementSibling;
-  }
-  return [routes, mws];
-}
-
-function defaultRouteResolver (el: Element): RouteDef {
-  const path = el.getAttribute('path');
-  let template = (el as Partial<WithTemplate>).template ?? el.getAttribute('template');
-  if (!template && el instanceof HTMLTemplateElement) {
-    template = document.importNode(el.content, true);
-  }
-  if (path && template) {
-    return { path, template };
-  }
-  throw new Error('malformed route');
-}
-
-function defaultMiddlewareResolver (el: Element): Middleware {
-  const mw = (el as Partial<WithMiddlewareCallback>).callback;
-  if (mw) {
-    return mw;
-  }
-  throw new Error('malformed middleware');
-}
-
-interface IRouterElement {
-  readonly router: Router;
-  routerReady?: Promise<void>;
-}
-
-export function router (opts: Partial<MixinOptions> = {}) {
-  return function <TBase extends Constructor<CustomeElement>> (Base: TBase): TBase & Constructor<IRouterElement> {
-    return class extends Base {
-      router!: Router;
-      routerReady?: Promise<void>;
-
-      get routerRoot (): Element | DocumentFragment {
-        return this.shadowRoot ?? this;
-      }
-
-      connectedCallback () {
-        if (super.connectedCallback) {
-          super.connectedCallback();
-        }
-        this.routerReady = this.__enableRouter();
-      }
-
-      disconnectedCallback () {
-        if (super.disconnectedCallback) {
-          super.disconnectedCallback();
-        }
-        this.__disableRouter();
-      }
-
-      async __enableRouter (): Promise<void> {
-        if (!globalState) {
-          configure();
-        }
-        await sleep(getState().config.delay);
-        const outlet = this.routerRoot.querySelector('[outlet]') ?? this;
-        this.router = new Router(outlet, opts);
-        const [routes, mws] = findRoutesAndMiddlewares(this.routerRoot);
-        this.router.route(...routes);
-        this.router.use(...mws);
-        if (opts.listen || this.hasAttribute('listen')) {
-          await this.router.listen();
-        }
-      }
-
-      async __disableRouter () {
-        await this.routerReady;
-        if (!globalState) {
-          return;
-        }
-        if (this.router) {
-          this.router.unlisten();
-        }
-      }
-    };
+export function template (tpl: HTMLTemplateElement): RouteFn {
+  return () => {
+    const content = document.importNode(tpl.content, true);
+    return Promise.resolve(content.firstElementChild);
   };
 }
 
-interface Navigator {
-  push (path: string, state?: unknown): Promise<void>;
-  replace (path: string, state?: unknown): Promise<void>;
-  pop (): Promise<void>;
-  go (delta: number): Promise<void>;
+interface ComponentLoadFn {
+  (ctx: Context): Promise<void>;
 }
 
-export function navigator () {
-  return function <TBase extends Constructor<CustomeElement>> (Base: TBase): TBase & Constructor<Navigator> {
-    return class extends Base {
-      push (path: string, state?: unknown): Promise<void> {
-        return push(path, state);
-      }
-
-      replace (path: string, state?: unknown): Promise<void> {
-        return replace(path, state);
-      }
-
-      pop (): Promise<void> {
-        return pop();
-      }
-
-      go (delta: number): Promise<void> {
-        return go(delta);
-      }
-    };
-  };
-}
-
-export class RouterElement extends navigator()(router()(HTMLElement)) {}
-customElements.define('xlit-router', RouterElement);
-
-interface LoadFn {
-  (template: string, ctx: Context): Promise<unknown>;
-}
-
-export function lazy (template: string, load: LoadFn): FunctionTemplate {
-  return async (ctx: Context) => {
-    await load(template, ctx);
-    return template;
-  };
-}
-
-function waitFor (target: EventTarget, name: string, timeoutLength = 500): Promise<Event> {
-  return new Promise<Event>((resolve, reject) => {
-    function clean () {
-      clearTimeout(t);
-      target.removeEventListener(name, handle);
+export function component (name: string, load?: ComponentLoadFn): RouteFn {
+  return async (ctx) => {
+    if (load) {
+      await load(ctx);
     }
-    const t = setTimeout(() => {
-      clean();
-      reject(new Error(`wait for event '${name}' got timeout`));
-    }, timeoutLength);
-    const handle = (evt: Event) => {
-      clean();
-      resolve(evt);
-    };
-    target.addEventListener(name, handle);
-  });
-}
-
-function sleep (t = 0): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, t));
-}
-
-declare global {
-  interface WindowEventMap {
-    'router-dispatch': CustomEvent<Context>;
-  }
+    return document.createElement(name);
+  };
 }

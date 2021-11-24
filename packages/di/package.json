@@ -3,18 +3,18 @@
   "version": "0.1.6",
   "description": "xlit dependency injection custom element",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
   "sideEffects": false,
   "files": [
-    "/dist/index.d.ts",
-    "/dist/index.js",
-    "/dist/index.js.map"
+    "/index.d.ts",
+    "/index.js",
+    "/index.js.map"
   ],
   "scripts": {
     "prepublish": "npm run clean; npm run build",
-    "clean": "rm -rf dist/",
+    "clean": "rm -rf index.js index.js.map index.d.ts",
     "build": "tsc",
     "test": "wtr ./src/**/*.test.ts --node-resolve --coverage"
   },
@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/reekoheek/xlit#readme",
   "devDependencies": {
-    "@open-wc/testing": "^2.5.33"
+    "@open-wc/testing": "^3.0.3"
   },
   "publishConfig": {
     "access": "public"

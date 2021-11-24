@@ -10,13 +10,10 @@ npm i @xlit/di
 
 ## Getting started
 
-```typescript
-import { container, inject } from '@xlit/di';
+```js
+import { container, injectable } from '@xlit/di';
 
-/**
- * Configure root container to have instances, singletons and factories
- **/
-configure({
+@container({
   instance: {
     foo: 'foo',
   },
@@ -26,21 +23,22 @@ configure({
   factories: {
     baz: () => 'baz',
   },
-});
-
-/**
- * Now create new custom element with auto injected property from configured
- * container
- **/
+})
 class XApp extends HTMLElement {
-  @inject()
-  foo!: string;
-
-  @inject({ name: 'bar' })
-  bar!: string;
-
-  @inject({ after: true })
-  baz!: string;
+  @injectable()
+  other = 'some other';
 }
 customElements.define('x-app', XApp);
+```
+
+Child elements can inject container data with `inject` decorator
+
+```js
+import { inject } from '@xlit/di';
+
+class XChild extends HTMLElement {
+  @inject()
+  other: string;
+}
+customElements.define('x-child', XChild);
 ```
