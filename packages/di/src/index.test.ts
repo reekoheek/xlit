@@ -1,120 +1,63 @@
 import { fixture, html, assert } from '@open-wc/testing';
-import { Container, lookup, container, inject, injectable, provide, attach, detach } from './index';
+import { Container, container, instance, lookup, provide, singleton } from './index';
 
 describe('di', () => {
   describe('Container', () => {
     describe('constructor', () => {
       it('create new container with configuration', () => {
         const container = new Container({
-          instances: {
-            foo: 'foo',
-          },
-          singletons: {
-            bar: () => 'bar',
-          },
-          factories: {
-            baz: () => 'baz',
-          },
+          bar: () => 'bar',
+          baz: () => 'baz',
         });
 
-        assert.deepStrictEqual(['foo', 'bar', 'baz'], Object.keys(container.fns));
+        assert.deepStrictEqual(['bar', 'baz'], Object.keys(container.fns));
       });
     });
 
-    describe('#instance()', () => {
-      it('provide instance', () => {
-        const container = new Container();
-        container.instance('obj', 'foo');
-        assert.strictEqual('foo', container.lookup('obj'));
-        container.instance('obj', 'bar');
-        assert.strictEqual('bar', container.lookup('obj'));
-      });
-    });
-
-    describe('#singleton()', () => {
-      it('provide singleton factory', () => {
-        const container = new Container();
-        let hit = 0;
-        container.singleton('obj', () => hit++);
-        assert.strictEqual(0, container.lookup('obj'));
-        assert.strictEqual(0, container.lookup('obj'));
-      });
-    });
-
-    describe('#factory()', () => {
+    describe('#provide()', () => {
       it('provide instance factory', () => {
         const container = new Container();
         let hit = 0;
-        container.factory('obj', () => hit++);
+        container.provide('obj', () => hit++);
         assert.strictEqual(0, container.lookup('obj'));
         assert.strictEqual(1, container.lookup('obj'));
       });
 
       it('take container as parameter', () => {
         const container = new Container();
-        container.factory('obj', (c) => container === c);
+        container.provide('obj', (c) => container === c);
         assert.isTrue(container.lookup('obj'));
       });
     });
   });
 
-  describe('lookup()', () => {
-    it('dispatch di-lookup event', async () => {
-      const root = await fixture(html`<root></root>`);
-      root.addEventListener('di-lookup', (evt) => {
-        const e = evt as CustomEvent<{ name: string; instance: unknown }>;
-        assert.strictEqual(true, evt.bubbles);
-        assert.strictEqual(true, evt.composed);
-        e.detail.instance = e.detail.name;
-      });
-      assert.strictEqual('foo', lookup(root, 'foo'));
-      assert.strictEqual('bar', lookup(root, 'bar'));
+  // describe('_lookup()', () => {
+  //   it('dispatch di-lookup event', async () => {
+  //     const root = await fixture(html`<root></root>`);
+  //     root.addEventListener('di-lookup', (evt) => {
+  //       const e = evt as CustomEvent<{ name: string; instance: unknown }>;
+  //       assert.strictEqual(true, evt.bubbles);
+  //       assert.strictEqual(true, evt.composed);
+  //       e.detail.instance = e.detail.name;
+  //     });
+  //     assert.strictEqual('foo', _lookup(root, 'foo'));
+  //     assert.strictEqual('bar', _lookup(root, 'bar'));
+  //   });
+  // });
+
+  describe('instance()', () => {
+    it('generate factory to instance', () => {
+      const fn = instance('foo');
+      assert.strictEqual('foo', fn(new Container()));
     });
   });
 
-  describe('provide()', () => {
-    it('dispatch di-provide event', async () => {
-      interface IDetail {
-        name: string;
-        type: string;
-        value: string;
-      }
-      const root = await fixture(html`<root></root>`);
-      const details: IDetail[] = [];
-      root.addEventListener('di-provide', (evt) => {
-        const e = evt as CustomEvent<IDetail>;
-        assert.strictEqual(true, evt.bubbles);
-        assert.strictEqual(true, evt.composed);
-        details.push(e.detail);
-      });
-      provide(root, { name: 'foo', type: 'singleton', value: 'foo' });
-      provide(root, { name: 'bar', type: 'factory', value: 'bar' });
-      provide(root, { name: 'baz', type: 'instance', value: 'baz' });
-      assert.deepStrictEqual([
-        { name: 'foo', type: 'singleton', value: 'foo' },
-        { name: 'bar', type: 'factory', value: 'bar' },
-        { name: 'baz', type: 'instance', value: 'baz' },
-      ], details);
-    });
-  });
-
-  describe('attach()', () => {
-    it('attach container to element', async () => {
-      const root = await fixture(html`<root></root>`);
-      attach(root);
-      assert.isTrue('__diContainer' in root);
-      assert.isTrue('__diLookupListener' in root);
-      assert.isTrue('__diProvideListener' in root);
-    });
-  });
-
-  describe('detach()', () => {
-    it('detach container from element', async () => {
-      const root = await fixture(html`<root></root>`);
-      detach(root);
-      assert.isFalse('__diContainer' in root);
-      assert.isFalse('__diLookupListener' in root);
-      assert.isFalse('__diProvideListener' in root);
+  describe('singleton()', () => {
+    it('generate singleton factory', () => {
+      let i = 0;
+      const fn = singleton(() => i++);
+      assert.strictEqual(0, fn(new Container()));
+      assert.strictEqual(0, fn(new Container()));
     });
   });
 
@@ -129,17 +72,15 @@ describe('di', () => {
     });
   });
 
-  describe('@inject()', () => {
-    it('inject property', async () => {
+  describe('@lookup()', () => {
+    it('lookup and inject property', async () => {
       class TDIInjectElement extends container({
-        instances: {
-          foo: 'foo',
-        },
+        foo: () => 'foo',
       })(HTMLElement) {
-        @inject()
+        @lookup()
         foo!: string;
 
-        @inject('foo')
+        @lookup('foo')
         bar!: string;
       }
       customElements.define('tdi-inject', TDIInjectElement);
@@ -150,32 +91,29 @@ describe('di', () => {
     });
   });
 
-  describe('@injectable()', () => {
-    it('provide to container', async () => {
+  describe('@provide()', () => {
+    it('provide property value to container', async () => {
       let i = 0;
-      class TDIInjectableElement extends container()(HTMLElement) {
-        @injectable()
+      const c = new Container();
+      class TDIInjectableElement extends container(c)(HTMLElement) {
+        @provide()
         foo = 'foo';
 
-        @injectable({ type: 'singleton' })
+        @provide()
         bar = () => `bar-${i++}`;
 
-        @injectable({ type: 'factory' })
-        baz = () => `baz-${i++}`;
-
-        @injectable({ type: 'singleton' })
-        foox = (c: Container) => c.lookup('foo') + 'x';
+        @provide('bazx')
+        baz = 'baz';
       }
       customElements.define('tdi-injectable', TDIInjectableElement);
 
-      const el: TDIInjectableElement = await fixture(html`<tdi-injectable></tdi-injectable>`);
-      assert.strictEqual('foo', lookup(el, 'foo'));
-      assert.strictEqual('foo', lookup(el, 'foo'));
-      assert.strictEqual('bar-0', lookup(el, 'bar'));
-      assert.strictEqual('bar-0', lookup(el, 'bar'));
-      assert.strictEqual('baz-1', lookup(el, 'baz'));
-      assert.strictEqual('baz-2', lookup(el, 'baz'));
-      assert.strictEqual('foox', lookup(el, 'foox'));
+      await fixture(html`<tdi-injectable></tdi-injectable>`);
+      assert.strictEqual('foo', c.lookup('foo'));
+      assert.strictEqual('foo', c.lookup('foo'));
+      assert.strictEqual('bar-0', c.lookup('bar'));
+      assert.strictEqual('bar-1', c.lookup('bar'));
+      assert.strictEqual(undefined, c.lookup('baz'));
+      assert.strictEqual('baz', c.lookup('bazx'));
     });
   });
 });

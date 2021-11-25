@@ -11,34 +11,37 @@ npm i @xlit/di
 ## Getting started
 
 ```js
-import { container, injectable } from '@xlit/di';
+import { container, instance, singleton, injectable } from '@xlit/di';
 
 @container({
-  instance: {
-    foo: 'foo',
-  },
-  singletons: {
-    bar: () => 'bar',
-  },
-  factories: {
-    baz: () => 'baz',
-  },
+  foo: () => 'foo',
+  bar: instance('bar'),
+  baz: singleton(() => 'baz'),
 })
 class XApp extends HTMLElement {
-  @injectable()
-  other = 'some other';
+  @provide()
+  foox = 'foox';
+
+  @provide('barx')
+  _barx = 'barx';
+
+  @provide()
+  bazx = () => 'bazx';
 }
 customElements.define('x-app', XApp);
 ```
 
-Child elements can inject container data with `inject` decorator
+Child elements can lookup and inject container data with `lookup` decorator
 
 ```js
-import { inject } from '@xlit/di';
+import { lookup } from '@xlit/di';
 
 class XChild extends HTMLElement {
-  @inject()
-  other: string;
+  @lookup()
+  foo: string;
+
+  @lookup('barx')
+  bar: string;
 }
 customElements.define('x-child', XChild);
 ```
