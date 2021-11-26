@@ -1,0 +1,48 @@
+{
+  "name": "@xlit/form",
+  "version": "0.1.7",
+  "description": "xlit form custom element",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "/*.d.ts",
+    "/*.js.map",
+    "/index.js",
+    "/validators.js"
+  ],
+  "scripts": {
+    "prepublish": "npm run clean; npm run build",
+    "clean": "rm -rf index.js validators.js *.js.map *.d.ts",
+    "build": "tsc",
+    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
+    "examples": "vite examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "form",
+    "customelements",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^3.0.3",
+    "lit": "^2.0.2"
+  },
+  "peerDependencies": {
+    "lit": "^2.0.2"
+  }
+}

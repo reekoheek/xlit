@@ -212,6 +212,8 @@ export class Router {
   readonly window: Window;
   readonly history: History;
   readonly location: Location;
+  private completeDispatch!: (value?: unknown) => void;
+  dispatchComplete = new Promise(resolve => (this.completeDispatch = resolve));
   ctx?: Context;
 
   popstateListener: EventListener = (evt) => {
@@ -279,20 +281,24 @@ export class Router {
     if (this.ctx?.equals(ctx)) {
       return;
     }
+    try {
+      await invokeMiddlewareChain(this.middlewares, ctx, async () => {
+        const route = this.routes.find(r => r.test(ctx));
+        if (!route) {
+          throw new Error('route not found');
+        }
 
-    await invokeMiddlewareChain(this.middlewares, ctx, async () => {
-      const route = this.routes.find(r => r.test(ctx));
-      if (!route) {
-        throw new Error('route not found');
-      }
+        this.ctx = ctx;
 
-      this.ctx = ctx;
-
-      const result = await route.invoke(ctx);
-      if (result) {
-        await this.outlet.render(result);
-      }
-    });
+        const result = await route.invoke(ctx);
+        if (result) {
+          await this.outlet.render(result);
+        }
+      });
+    } finally {
+      this.completeDispatch();
+      this.dispatchComplete = new Promise(resolve => (this.completeDispatch = resolve));
+    }
   }
 
   push (path: string, state?: unknown): void {
@@ -324,7 +330,7 @@ export function template (tpl: HTMLTemplateElement): RouteFn {
 }
 
 interface ComponentLoadFn {
-  (ctx: Context): Promise<void>;
+  (ctx: Context): Promise<unknown>;
 }
 
 export function component (name: string, load?: ComponentLoadFn): RouteFn {
