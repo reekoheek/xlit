@@ -41,8 +41,8 @@ export class Form implements ReactiveController {
     // noop
   }
 
-  value (name: string, defaultValue?: unknown): unknown {
-    return this.model[name] || defaultValue;
+  value<TValue> (name: string, defaultValue?: TValue): TValue | undefined {
+    return (this.model[name] as TValue) || defaultValue;
   }
 
   input (name: string): EventListener {
@@ -101,9 +101,9 @@ export class Form implements ReactiveController {
     }
   }
 
-  get (): Model {
+  get<TModel> (): TModel {
     this.assert();
-    return this.model;
+    return this.model as TModel;
   }
 }
 

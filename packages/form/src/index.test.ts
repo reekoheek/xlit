@@ -80,7 +80,7 @@ describe('form', () => {
     describe('#get()', () => {
       it('get model', async () => {
         const el: TForm = await fixture(html`<t-form></t-form>`);
-        assert.deepStrictEqual({}, el.form.model);
+        assert.deepStrictEqual({}, el.form.get());
       });
 
       it('throw error if form invalid', async () => {
@@ -115,8 +115,8 @@ class TForm extends LitElement {
   render () {
     return html`
       <form>
-        <input id="fooInput" type="text" .value="${this.form.value('foo', '')}" @input="${this.form.input('foo')}">
-        <input id="barInput" type="text" .value="${this.form.value('bar', '')}" @input="${this.form.input('bar')}">
+        <input id="fooInput" type="text" value="${this.form.value('foo', '')}" @input="${this.form.input('foo')}">
+        <input id="barInput" type="text" value="${this.form.value('bar', '')}" @input="${this.form.input('bar')}">
       </form>
 
       <div id="foo">${this.form.value('foo', '')}</div>
