@@ -6,11 +6,13 @@ interface FactoryFn {
   (c: Lookuper): unknown;
 }
 
-const NILFN: FactoryFn = () => undefined;
+interface Provider {
+  provide (name: string, fn?: FactoryFn): void;
+}
 
 type ContainerOptions = Record<string, FactoryFn>
 
-export class Container implements Lookuper {
+export class Container implements Lookuper, Provider {
   fns: Record<string, FactoryFn> = {};
 
   constructor (opts?: ContainerOptions) {
@@ -20,8 +22,8 @@ export class Container implements Lookuper {
     }
   }
 
-  provide (name: string, fn: FactoryFn): void {
-    if (fn === NILFN) {
+  provide (name: string, fn?: FactoryFn): void {
+    if (!fn) {
       delete this.fns[name];
     } else {
       this.fns[name] = fn;
@@ -55,7 +57,7 @@ interface LookupEventDetail {
 
 interface ProvideEventDetail {
   readonly name: string;
-  readonly fn: FactoryFn;
+  readonly fn?: FactoryFn;
 }
 
 type Constructor<T> = {
@@ -77,22 +79,86 @@ interface Provide {
   readonly to: string;
 }
 
-export interface WithInjected {
-  injected: Promise<void>;
+type AccessorElement = CustomElement & Lookuper & Provider & {
+  injectLookup(lookup: Lookup): void;
+  injectProvide(provide: Provide): void;
 }
 
-interface InjectedElement extends CustomElement {
-  __diLookups: Lookup[];
-  __diProvides: Provide[];
-  __diResolveInject(): void;
-  injected: Promise<void>;
+function isAccessored (Base: Constructor<CustomElement>): boolean {
+  return 'injectLookup' in Base.prototype;
+}
+
+export function accessor () {
+  return function <TBase extends Constructor<CustomElement>> (Base: TBase): TBase & Constructor<AccessorElement> {
+    if (isAccessored(Base)) {
+      return (Base as unknown) as (TBase & Constructor<AccessorElement>);
+    }
+    return class extends Base {
+      __diLookups!: Lookup[];
+      __diProvides!: Provide[];
+
+      lookup<T> (name: string): T | undefined {
+        const evt = new CustomEvent<LookupEventDetail>('di-lookup', {
+          detail: { name },
+          bubbles: true,
+          composed: true,
+        });
+        this.dispatchEvent(evt);
+        return evt.detail.instance as T;
+      }
+
+      provide (name: string, fn?: FactoryFn): void {
+        const evt = new CustomEvent<ProvideEventDetail>('di-provide', {
+          detail: { name, fn },
+          bubbles: true,
+          composed: true,
+        });
+        this.dispatchEvent(evt);
+      }
+
+      injectLookup (lookup: Lookup): void {
+        this.__diLookups = this.__diLookups ?? [];
+        this.__diLookups.push(lookup);
+      }
+
+      injectProvide (provide: Provide): void {
+        this.__diProvides = this.__diProvides ?? [];
+        this.__diProvides.push(provide);
+      }
+
+      connectedCallback () {
+        if (super.connectedCallback) super.connectedCallback();
+        (this.__diProvides ?? []).forEach(({ from, to }) => {
+          const o = (this as unknown) as Record<string, FactoryFn>;
+          this.provide(to, typeof o[from] === 'function' ? o[from] : () => o[from]);
+        });
+
+        (this.__diLookups ?? []).forEach(({ to, from }) => {
+          (this as Record<string, unknown>)[to] = this.lookup(from);
+        });
+      }
+
+      disconnectedCallback () {
+        if (super.disconnectedCallback) super.disconnectedCallback();
+        (this.__diProvides ?? []).forEach(({ to }) => {
+          this.provide(to, undefined);
+        });
+      }
+    };
+  };
+}
+
+function isContainerized (Base: Constructor<CustomElement>): boolean {
+  return 'getContainer' in Base.prototype;
 }
 
 export function container (opts?: ContainerOptions | Container) {
-  return function <TBase extends Constructor<CustomElement>> (Base: TBase): TBase & Constructor<WithInjected> {
-    return class extends Base {
+  return function <TBase extends Constructor<CustomElement>> (Base: TBase): TBase & Constructor<AccessorElement> {
+    if (isContainerized(Base)) {
+      return Base as (TBase & Constructor<AccessorElement>);
+    }
+    return class extends accessor()(Base) {
       __diContainer = opts instanceof Container ? opts : new Container(opts);
-      injected!: Promise<void>;
 
       __diLookupListener: EventListener = (evt) => {
         const detail = (evt as CustomEvent<LookupEventDetail>).detail;
@@ -110,106 +176,37 @@ export function container (opts?: ContainerOptions | Container) {
         this.__diContainer.provide(name, fn);
       };
 
-      connectedCallback () {
-        if (super.connectedCallback) super.connectedCallback();
+      constructor () {
+        super();
         this.addEventListener('di-lookup', this.__diLookupListener);
         this.addEventListener('di-provide', this.__diProvideListener);
       }
 
-      disconnectedCallback () {
-        if (super.disconnectedCallback) super.disconnectedCallback();
-        this.removeEventListener('di-lookup', this.__diLookupListener);
-        this.removeEventListener('di-provide', this.__diProvideListener);
+      getContainer (): Container {
+        return this.__diContainer;
       }
     };
   };
 }
 
-function isInjectedElement (object: unknown): object is InjectedElement {
-  return '__diLookups' in (object as Record<string, unknown>);
-}
-
-function resolveFn (o: unknown, k: string): FactoryFn {
-  const bag = o as Record<string, FactoryFn>;
-  return typeof bag[k] === 'function' ? bag[k] : () => bag[k];
-}
-
-function setProp (o: unknown, k: string, v: unknown): void {
-  const bag = o as Record<string, unknown>;
-  bag[k] = v;
-}
-
-function toInjectedElement (object: unknown): InjectedElement {
-  if (isInjectedElement(object)) {
-    return object;
-  }
-
-  const el = object as InjectedElement;
-
-  el.__diLookups = [];
-  el.__diProvides = [];
-  el.injected = new Promise(resolve => (el.__diResolveInject = resolve));
-
-  const origConnectedCb = el.connectedCallback;
-  el.connectedCallback = function () {
-    if (origConnectedCb) origConnectedCb.call(this);
-
-    this.__diProvides.forEach(({ from, to }) => {
-      const evt = new CustomEvent<ProvideEventDetail>('di-provide', {
-        detail: { name: to, fn: resolveFn(this, from) },
-        bubbles: true,
-        composed: true,
-      });
-      this.dispatchEvent(evt);
-    });
-
-    this.__diLookups.forEach(({ to, from }) => {
-      const evt = new CustomEvent<LookupEventDetail>('di-lookup', {
-        detail: { name: from },
-        bubbles: true,
-        composed: true,
-      });
-      this.dispatchEvent(evt);
-      setProp(this, to, evt.detail.instance);
-    });
-    this.__diResolveInject();
-  };
-
-  const origDisconnectedCb = el.disconnectedCallback;
-  el.disconnectedCallback = function () {
-    if (origDisconnectedCb) origDisconnectedCb.call(this);
-
-    this.__diProvides.forEach(({ to }) => {
-      const evt = new CustomEvent<ProvideEventDetail>('di-provide', {
-        detail: { name: to, fn: NILFN },
-        bubbles: true,
-        composed: true,
-      });
-      this.dispatchEvent(evt);
-    });
-
-    el.injected = new Promise(resolve => (el.__diResolveInject = resolve));
-  };
-
-  return el;
+function isAccessorElement (object: unknown): object is AccessorElement {
+  return 'injectLookup' in (object as Record<string, unknown>);
 }
 
 export function lookup (name?: string) {
   return function (target: HTMLElement, propName: string): void {
-    const el = toInjectedElement(target);
-    el.__diLookups.push({
-      from: name || propName,
-      to: propName,
-    });
+    if (!isAccessorElement(target)) {
+      throw new Error('lookup must be run on accessor element');
+    }
+    target.injectLookup({ from: name || propName, to: propName });
   };
 }
 
 export function provide (name?: string) {
   return function (target: HTMLElement, propName: string): void {
-    const el = toInjectedElement(target);
-    el.__diProvides.push({
-      from: propName,
-      to: name || propName,
-    });
+    if (!isAccessorElement(target)) {
+      throw new Error('provide must be run on accessor element');
+    }
+    target.injectProvide({ from: propName, to: name || propName });
   };
 }

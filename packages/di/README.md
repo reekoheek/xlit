@@ -34,9 +34,9 @@ customElements.define('x-app', XApp);
 Child elements can lookup and inject container data with `lookup` decorator
 
 ```js
-import { lookup } from '@xlit/di';
+import { accessor, lookup } from '@xlit/di';
 
-class XChild extends HTMLElement {
+class XChild extends accessor(HTMLElement) {
   @lookup()
   foo: string;
 

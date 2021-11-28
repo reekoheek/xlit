@@ -1,5 +1,5 @@
 import { fixture, html, assert } from '@open-wc/testing';
-import { Container, container, instance, lookup, provide, singleton } from './index';
+import { accessor, Container, container, instance, lookup, provide, singleton } from './index';
 
 describe('di', () => {
   describe('Container', () => {
@@ -31,20 +31,6 @@ describe('di', () => {
     });
   });
 
-  // describe('_lookup()', () => {
-  //   it('dispatch di-lookup event', async () => {
-  //     const root = await fixture(html`<root></root>`);
-  //     root.addEventListener('di-lookup', (evt) => {
-  //       const e = evt as CustomEvent<{ name: string; instance: unknown }>;
-  //       assert.strictEqual(true, evt.bubbles);
-  //       assert.strictEqual(true, evt.composed);
-  //       e.detail.instance = e.detail.name;
-  //     });
-  //     assert.strictEqual('foo', _lookup(root, 'foo'));
-  //     assert.strictEqual('bar', _lookup(root, 'bar'));
-  //   });
-  // });
-
   describe('instance()', () => {
     it('generate factory to instance', () => {
       const fn = instance('foo');
@@ -70,6 +56,20 @@ describe('di', () => {
       const el = await fixture(html`<tdi-container></tdi-container>`);
       assert.isTrue('__diContainer' in el);
     });
+
+    it('avoid define container multiple times', () => {
+      const A = container()(HTMLElement);
+      const B = container()(A);
+      assert.strictEqual(A, B);
+    });
+  });
+
+  describe('@accessor()', () => {
+    it('avoid define container multiple times', () => {
+      const A = accessor()(HTMLElement);
+      const B = accessor()(A);
+      assert.strictEqual(A, B);
+    });
   });
 
   describe('@lookup()', () => {
@@ -83,11 +83,21 @@ describe('di', () => {
         @lookup('foo')
         bar!: string;
       }
-      customElements.define('tdi-inject', TDIInjectElement);
+      customElements.define('tdi-lookup', TDIInjectElement);
 
-      const el: TDIInjectElement = await fixture(html`<tdi-inject></tdi-inject>`);
+      const el: TDIInjectElement = await fixture(html`<tdi-lookup></tdi-lookup>`);
       assert.strictEqual('foo', el.foo);
       assert.strictEqual('foo', el.bar);
+    });
+
+    it('throw error if class not accessor element', () => {
+      assert.throw(() => {
+        class Foo extends HTMLElement {
+          @lookup()
+          foo: string;
+        }
+        console.info(Foo);
+      }, 'lookup must be run on accessor element');
     });
   });
 
@@ -105,15 +115,25 @@ describe('di', () => {
         @provide('bazx')
         baz = 'baz';
       }
-      customElements.define('tdi-injectable', TDIInjectableElement);
+      customElements.define('tdi-provide', TDIInjectableElement);
 
-      await fixture(html`<tdi-injectable></tdi-injectable>`);
+      await fixture(html`<tdi-provide></tdi-provide>`);
       assert.strictEqual('foo', c.lookup('foo'));
       assert.strictEqual('foo', c.lookup('foo'));
       assert.strictEqual('bar-0', c.lookup('bar'));
       assert.strictEqual('bar-1', c.lookup('bar'));
       assert.strictEqual(undefined, c.lookup('baz'));
       assert.strictEqual('baz', c.lookup('bazx'));
+    });
+
+    it('throw error if class not accessor element', () => {
+      assert.throw(() => {
+        class Foo extends HTMLElement {
+          @provide()
+          foo = 'foo';
+        }
+        console.info(Foo);
+      }, 'provide must be run on accessor element');
     });
   });
 });
