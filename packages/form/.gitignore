@@ -1,0 +1,6 @@
+/coverage
+/node_modules
+/index.js
+/validators.js
+/*.js.map
+/*.d.ts
