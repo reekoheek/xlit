@@ -25,6 +25,7 @@ describe('validators', () => {
     it('throw error if length below specified', () => {
       assert.throw(() => minLength(5)('foo'), 'length must greater or equal than 5');
       assert.throw(() => minLength(4)('foo'), 'length must greater or equal than 4');
+      assert.throw(() => minLength(3)({}));
       assert.strictEqual('foo', minLength(3)('foo'));
       assert.strictEqual(undefined, minLength(3)(undefined));
       assert.strictEqual(null, minLength(3)(null));
@@ -35,6 +36,7 @@ describe('validators', () => {
     it('throw error if length above specified', () => {
       assert.throw(() => maxLength(5)('123456'), 'length must lower or equal than 5');
       assert.throw(() => maxLength(4)('123456'), 'length must lower or equal than 4');
+      assert.throw(() => maxLength(3)({}));
       assert.strictEqual('foo', maxLength(3)('foo'));
       assert.strictEqual(undefined, maxLength(3)(undefined));
       assert.strictEqual(null, maxLength(3)(null));
