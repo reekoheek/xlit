@@ -35,7 +35,7 @@ describe('Container', () => {
         baz: () => 'baz',
       });
 
-      assert.deepStrictEqual(['bar', 'baz'], Object.keys(container.fns));
+      assert.deepStrictEqual(['bar', 'baz'], Object.keys(container['fns']));
     });
   });
 
