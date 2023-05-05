@@ -54,6 +54,8 @@ const router = new Router(document.getElementById('outlet'))
   .route('/login', component('x-login'))
   // route with lazy loading component
   .route('/lazy', component('x-lazy', () => import('./lazy.js')));
+
+router.start();
 ```
 
 Write `lazy.js`:
