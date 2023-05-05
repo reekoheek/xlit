@@ -16,7 +16,8 @@
     "prepublish": "npm run clean; npm run build",
     "clean": "rm -rf index.js index.js.map index.d.ts",
     "build": "tsc",
-    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage"
+    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
+    "examples": "vite examples"
   },
   "repository": {
     "type": "git",
@@ -34,9 +35,6 @@
     "url": "https://github.com/reekoheek/xlit/issues"
   },
   "homepage": "https://github.com/reekoheek/xlit#readme",
-  "devDependencies": {
-    "@open-wc/testing": "^3.0.3"
-  },
   "publishConfig": {
     "access": "public"
   }

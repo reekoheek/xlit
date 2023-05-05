@@ -10,22 +10,39 @@ npm i @xlit/di
 
 ## Getting started
 
-```js
-import { container, instance, singleton, injectable } from '@xlit/di';
+Implement container
 
-@container({
+```js
+// container.js
+
+import { Container, instance, singleton } from '@xlit/di';
+
+const container = new Container({
   foo: () => 'foo',
   bar: instance('bar'),
   baz: singleton(() => 'baz'),
-})
+});
+
+(async () => {
+  container.provide('other', instanec('other instance'));
+
+  const foo = await container.lookup('foo');
+})();
+```
+
+```js
+// x-app.js
+
+import { container } from './container.js';
+
 class XApp extends HTMLElement {
-  @provide()
+  @container.injectable()
   foox = 'foox';
 
-  @provide('barx')
+  @container.injectable('barx')
   _barx = 'barx';
 
-  @provide()
+  @container.injectable()
   bazx = () => 'bazx';
 }
 customElements.define('x-app', XApp);
@@ -34,13 +51,13 @@ customElements.define('x-app', XApp);
 Child elements can lookup and inject container data with `lookup` decorator
 
 ```js
-import { accessor, lookup } from '@xlit/di';
+import { container } from './container.js';
 
-class XChild extends accessor(HTMLElement) {
-  @lookup()
+class XChild extends HTMLElement {
+  @container.inject()
   foo: string;
 
-  @lookup('barx')
+  @container.inject('barx')
   bar: string;
 }
 customElements.define('x-child', XChild);
