@@ -1,17 +1,17 @@
-import { Container, injected, instance } from '../src';
+import { Container, injected, instance } from '../index';
 
 const container = new Container({
-  foo: instance('foo'),
+  bar: instance('bar'),
 });
 
 @container.injectable()
 class Foo {
   @container.injectLookup()
-  foo!: string;
+  bar!: string;
 }
 
 (async() => {
   const foo = new Foo();
   await injected(foo);
-  alert(foo.foo);
+  alert('This value injected from container: ' + foo.bar);
 })();

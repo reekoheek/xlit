@@ -96,7 +96,7 @@ export class Container {
       }));
     };
 
-    return <Class extends Constructor>(Target: Class, ctx: unknown) => {
+    return <Class extends Constructor>(Target: Class, ctx?: unknown) => {
       if (ctx) {
         throw new Error('new decorator spec unimplemented');
       }
