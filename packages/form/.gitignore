@@ -1,6 +1,12 @@
 /coverage
 /node_modules
+/examples
+/asserts
+/utils
 /index.js
-/validators.js
+/Form.js
+/*Type.js
+/*Error.js
+/*.test.js
 /*.js.map
 /*.d.ts
