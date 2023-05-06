@@ -1,4 +1,4 @@
-import { Router, template } from '../src';
+import { Router, template } from '../';
 
 const router = new Router(document.getElementById('app') as HTMLElement)
   .route('/', template(document.getElementById('home') as HTMLTemplateElement))
