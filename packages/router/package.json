@@ -1,6 +1,6 @@
 {
   "name": "@xlit/router",
-  "version": "0.1.10",
+  "version": "0.2.0",
   "description": "xlit router custom element",
   "type": "module",
   "main": "index.js",
@@ -14,10 +14,11 @@
   ],
   "scripts": {
     "prepublish": "npm run clean; npm run build",
-    "clean": "rm -rf index.js index.js.map index.d.ts",
+    "clean": "rm -rf index.js index.js.map index.d.ts examples",
+    "lint": "eslint ./src",
     "build": "tsc",
-    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
-    "examples": "vite examples"
+    "test": "wtr './src/**/*.test.ts' --node-resolve --coverage",
+    "examples": "vite ./src/examples"
   },
   "repository": {
     "type": "git",

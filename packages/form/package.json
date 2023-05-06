@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "0.1.10",
+  "version": "0.2.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "index.js",
@@ -10,15 +10,19 @@
   "files": [
     "/*.d.ts",
     "/*.js.map",
+    "!/*.test.*",
     "/index.js",
-    "/validators.js"
+    "/Form.js",
+    "/*Type.js",
+    "/*Error.js"
   ],
   "scripts": {
     "prepublish": "npm run clean; npm run build",
-    "clean": "rm -rf index.js validators.js *.js.map *.d.ts",
+    "clean": "rm -rf index.js Form.js *Type.js ValidationError.js *.js.map *.d.ts *.test.js examples asserts utils",
+    "lint": "eslint ./src",
     "build": "tsc",
-    "test": "wtr ./src/**/*.test.ts --node-resolve --coverage",
-    "examples": "vite examples"
+    "test": "wtr --files './src/**/*.test.ts' --node-resolve --coverage",
+    "examples": "vite ./src/examples"
   },
   "repository": {
     "type": "git",
@@ -39,7 +43,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@open-wc/testing": "^3.0.3",
     "lit": "^2.0.2"
   },
   "peerDependencies": {
