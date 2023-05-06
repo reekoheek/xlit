@@ -1,6 +1,6 @@
 {
   "name": "@xlit/di",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "xlit dependency injection custom element",
   "type": "module",
   "main": "index.js",
