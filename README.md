@@ -7,4 +7,5 @@ Set of custom elements for web applications.
 ```bash
 npm i @xlit/router
 npm i @xlit/di
+npm i @xlit/form
 ```
