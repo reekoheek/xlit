@@ -6,7 +6,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "strict": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
