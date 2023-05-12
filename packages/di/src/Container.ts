@@ -1,5 +1,5 @@
-import { DIError } from './DIError';
-import { Injectable, getMetadata } from './Injectable';
+import { DIError } from './DIError.js';
+import { Injectable, getMetadata } from './Injectable.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T = object> = new (...args: any[]) => T;

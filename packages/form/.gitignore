@@ -1,4 +1,9 @@
 .DS_Store
 /coverage
 /node_modules
-/dist
+
+/types
+/index.js
+/index.js.map
+/*.d.ts
+/*.d.ts.map

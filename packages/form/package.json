@@ -7,38 +7,40 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "types": "./index.d.ts",
+      "default": "./index.js"
     },
     "./types/BooleanType.js": {
-      "default": "./types/BooleanType.js",
-      "types": "./types/BooleanType.d.ts"
+      "types": "./types/BooleanType.d.ts",
+      "default": "./types/BooleanType.js"
     },
     "./types/NumberType.js": {
-      "default": "./types/NumberType.js",
-      "types": "./types/NumberType.d.ts"
+      "types": "./types/NumberType.d.ts",
+      "default": "./types/NumberType.js"
     },
     "./types/ObjectType.js": {
-      "default": "./types/ObjectType.js",
-      "types": "./types/ObjectType.d.ts"
+      "types": "./types/ObjectType.d.ts",
+      "default": "./types/ObjectType.js"
     },
     "./types/StringType.js": {
-      "default": "./types/StringType.js",
-      "types": "./types/StringType.d.ts"
+      "types": "./types/StringType.d.ts",
+      "default": "./types/StringType.js"
     }
   },
   "sideEffects": false,
   "files": [
-    "/dist/"
+    "/index.{js,js.map}",
+    "/*.{d.ts,d.ts.map}",
+    "/types/"
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm build",
-    "clean": "rm -rf dist coverage",
+    "clean": "rm -rf coverage types index.js *.d.ts *.map",
     "lint": "pnpm lint:eslint && pnpm lint:ts",
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
     "build": "pnpm lint && pnpm build:js && pnpm build:types",
-    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --external:../index.js --bundle --format=esm --sourcemap --outdir=./dist",
+    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --external:../index.js --bundle --format=esm --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
     "examples": "vite ./examples"

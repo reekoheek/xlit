@@ -1,4 +1,4 @@
-import { Provider } from './Container';
+import { Provider } from './Container.js';
 
 export function singleton(fn: Provider): Provider {
   let cache: Promise<unknown> | unknown;

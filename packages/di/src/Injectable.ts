@@ -1,5 +1,5 @@
-import { DIError } from './DIError';
-import { Metadata } from './Metadata';
+import { DIError } from './DIError.js';
+import { Metadata } from './Metadata.js';
 
 export interface Injectable {
   [key: string]: unknown;
