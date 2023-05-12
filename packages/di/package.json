@@ -1,10 +1,10 @@
 {
   "name": "@xlit/di",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "xlit dependency injection custom element",
   "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
     "/dist/"

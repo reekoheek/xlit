@@ -1,5 +1,11 @@
 # @xlit/form
 
+## 2.0.1
+
+### Patch Changes
+
+- fix(router): no entry point
+
 ## 2.0.0
 
 ### Major Changes

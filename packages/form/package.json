@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./dist/index.js",
