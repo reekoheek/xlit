@@ -1,6 +1,6 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { Type } from './Type';
-import { ValidationError } from './ValidationError';
+import { Type } from './Type.js';
+import { ValidationError } from './ValidationError.js';
 
 interface Types {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

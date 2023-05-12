@@ -1,4 +1,4 @@
-import { Type, ValidationError, Maybe } from '../';
+import { Type, ValidationError, Maybe } from '../index.js';
 
 type Validate = (value: unknown) => boolean;
 type ObjectLike = Record<string, unknown>;

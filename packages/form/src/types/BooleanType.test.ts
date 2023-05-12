@@ -1,4 +1,4 @@
-import { BooleanType } from './BooleanType';
+import { BooleanType } from './BooleanType.js';
 import { assert } from '@open-wc/testing';
 
 describe('BooleanType', () => {

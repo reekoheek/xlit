@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.0.2
+
+### Patch Changes
+
+- support module resolution nodenext
+
 ## 2.0.1
 
 ### Patch Changes

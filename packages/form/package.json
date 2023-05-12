@@ -1,30 +1,30 @@
 {
   "name": "@xlit/form",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "xlit form custom element",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./index.js",
+      "types": "./index.d.ts"
     },
     "./types/BooleanType.js": {
-      "default": "./dist/types/BooleanType.js",
-      "types": "./dist/types/BooleanType.d.ts"
+      "default": "./types/BooleanType.js",
+      "types": "./types/BooleanType.d.ts"
     },
     "./types/NumberType.js": {
-      "default": "./dist/types/NumberType.js",
-      "types": "./dist/types/NumberType.d.ts"
+      "default": "./types/NumberType.js",
+      "types": "./types/NumberType.d.ts"
     },
     "./types/ObjectType.js": {
-      "default": "./dist/types/ObjectType.js",
-      "types": "./dist/types/ObjectType.d.ts"
+      "default": "./types/ObjectType.js",
+      "types": "./types/ObjectType.d.ts"
     },
     "./types/StringType.js": {
-      "default": "./dist/types/StringType.js",
-      "types": "./dist/types/StringType.d.ts"
+      "default": "./types/StringType.js",
+      "types": "./types/StringType.d.ts"
     }
   },
   "sideEffects": false,
@@ -38,7 +38,7 @@
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
     "build": "pnpm lint && pnpm build:js && pnpm build:types",
-    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --bundle --format=esm --minify --sourcemap --outdir=./dist",
+    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --external:../index.js --bundle --format=esm --sourcemap --outdir=./dist",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
     "examples": "vite ./examples"

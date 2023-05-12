@@ -1,4 +1,4 @@
-import { Type, ValidationError, Maybe } from '../';
+import { Type, ValidationError, Maybe } from '../index.js';
 
 export class BooleanType extends Type<boolean> {
   cast(value: unknown): Maybe<boolean> {

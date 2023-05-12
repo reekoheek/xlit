@@ -1,4 +1,4 @@
-import { Type, ValidationError, Maybe } from '../';
+import { Type, ValidationError, Maybe } from '../index.js';
 
 export class NumberType extends Type<number> {
   cast(value: unknown): Maybe<number> {

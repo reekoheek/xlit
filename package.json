@@ -1,11 +1,11 @@
 {
   "name": "xlit-monorepo",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "description": "",
   "scripts": {
     "changeset": "changeset",
-    "release": "pnpm -r build && pnpm changeset publish"
+    "release": "pnpm -r build && pnpm changeset version && pnpm changeset publish"
   },
   "repository": {
     "type": "git",
@@ -26,8 +26,5 @@
     "eslint-config-xinix": "^2.0.1",
     "typescript": "^5.0.4",
     "vite": "^4.3.5"
-  },
-  "lint-staged": {
-    "*.{mjs,js,ts}": "eslint"
   }
 }

@@ -1,4 +1,4 @@
-import { Type, ValidationError, Maybe } from '../';
+import { Type, ValidationError, Maybe } from '../index.js';
 
 export class StringType extends Type<string> {
   cast(value: unknown): Maybe<string> {
