@@ -1,4 +1,4 @@
-import { assertRejects } from './assertRejects';
+import { assertRejects } from './assertRejects.js';
 
 describe('assertRejects()', () => {
   it('fail if no error', async() => {

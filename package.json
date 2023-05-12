@@ -4,6 +4,7 @@
   "private": true,
   "description": "",
   "scripts": {
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "changeset": "changeset",
     "release": "pnpm -r build && pnpm changeset version && pnpm changeset publish"
   },
