@@ -1,9 +1,9 @@
-import { Context } from './Context';
-import { HistoryMode } from './HistoryMode';
-import { DefaultOutlet, Outlet, isOutlet } from './Outlet';
-import { Route, RouteFn } from './Route';
-import { RouterError } from './RouterError';
-import { EventTargetInterface, HistoryInterface, LocationInterface, ModeInterface } from './types';
+import { Context } from './Context.js';
+import { HistoryMode } from './HistoryMode.js';
+import { DefaultOutlet, Outlet, isOutlet } from './Outlet.js';
+import { Route, RouteFn } from './Route.js';
+import { RouterError } from './RouterError.js';
+import { EventTargetInterface, HistoryInterface, LocationInterface, ModeInterface } from './types.js';
 
 type Next = () => Promise<void>
 

@@ -3,20 +3,21 @@
   "version": "2.0.2",
   "description": "xlit router custom element",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "sideEffects": false,
   "files": [
-    "/dist/"
+    "/index.{js,js.map}",
+    "/*.{d.ts,d.ts.map}"
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm build",
-    "clean": "rm -rf dist coverage",
+    "clean": "rm -rf coverage index.js *.d.ts *.map",
     "lint": "pnpm lint:eslint && pnpm lint:ts",
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
     "build": "pnpm lint && pnpm build:js && pnpm build:types",
-    "build:js": "esbuild ./src/index.ts --bundle --format=esm --minify --sourcemap --outdir=./dist",
+    "build:js": "esbuild ./src/index.ts --bundle --format=esm --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
     "examples": "vite ./examples"

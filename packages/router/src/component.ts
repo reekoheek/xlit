@@ -1,5 +1,5 @@
-import { Context } from './Context';
-import { RouteFn } from './Route';
+import { Context } from './Context.js';
+import { RouteFn } from './Route.js';
 
 type ComponentLoadFn = (ctx: Context) => Promise<unknown>;
 

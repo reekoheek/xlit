@@ -1,5 +1,5 @@
-import { RouteFn } from './Route';
-import { RouterError } from './RouterError';
+import { RouteFn } from './Route.js';
+import { RouterError } from './RouterError.js';
 
 export function template(tpl: HTMLTemplateElement): RouteFn {
   return () => {

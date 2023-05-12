@@ -1,5 +1,5 @@
-import { ModeInterface } from './types';
-import { RouterError } from './RouterError';
+import { ModeInterface } from './types.js';
+import { RouterError } from './RouterError.js';
 
 export class HistoryMode implements ModeInterface {
   constructor(private basePath = '/') {

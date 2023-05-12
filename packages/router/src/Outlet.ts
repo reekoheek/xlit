@@ -1,4 +1,4 @@
-import { ContextedElement } from './ContextedElement';
+import { ContextedElement } from './ContextedElement.js';
 
 export interface Outlet {
   render(el: ContextedElement): Promise<void>;

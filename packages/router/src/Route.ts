@@ -1,6 +1,6 @@
-import { Context } from './Context';
-import { ContextedElement, toContextedElement } from './ContextedElement';
-import { RouterError } from './RouterError';
+import { Context } from './Context.js';
+import { ContextedElement, toContextedElement } from './ContextedElement.js';
+import { RouterError } from './RouterError.js';
 
 export type RouteFn = (ctx: Context) => Promise<Element>;
 

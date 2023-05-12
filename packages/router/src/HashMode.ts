@@ -1,4 +1,4 @@
-import { ModeInterface } from './types';
+import { ModeInterface } from './types.js';
 
 export class HashMode implements ModeInterface {
   getContextPath({ hash }: { hash: string }): string {
