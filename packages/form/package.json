@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./dist/index.js",
@@ -32,7 +32,7 @@
     "/dist/"
   ],
   "scripts": {
-    "prepublish": "pnpm clean; pnpm test && pnpm build",
+    "prepublish": "pnpm clean; pnpm build",
     "clean": "rm -rf dist coverage",
     "lint": "pnpm lint:eslint && pnpm lint:ts",
     "lint:eslint": "eslint ./src",

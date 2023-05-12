@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.0.0
+
+### Major Changes
+
+- fix prepublish failed conflict port while test
+
 ## 1.0.0
 
 ### Major Changes
