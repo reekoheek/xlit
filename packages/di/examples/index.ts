@@ -1,4 +1,4 @@
-import { Container, injected, instance } from '../index';
+import { Container, injected, instance } from '../src';
 
 const container = new Container({
   bar: instance('bar'),

@@ -1,7 +1,7 @@
 import { Form } from './Form';
-import { StringType } from './StringType';
+import { StringType } from './types/StringType';
 import { assert, fixture } from '@open-wc/testing';
-import { assertRejects } from './asserts/assertRejects';
+import { assertRejects } from 'testutil';
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 

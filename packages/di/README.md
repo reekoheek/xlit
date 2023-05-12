@@ -35,14 +35,15 @@ const container = new Container({
 
 import { container } from './container.js';
 
+@container.injectable()
 class XApp extends HTMLElement {
-  @container.injectable()
+  @container.injectProvide()
   foox = 'foox';
 
-  @container.injectable('barx')
+  @container.injectProvide('barx')
   _barx = 'barx';
 
-  @container.injectable()
+  @container.injectProvide()
   bazx = () => 'bazx';
 }
 customElements.define('x-app', XApp);
@@ -53,11 +54,12 @@ Child elements can lookup and inject container data with `lookup` decorator
 ```js
 import { container } from './container.js';
 
+@container.injectable()
 class XChild extends HTMLElement {
-  @container.inject()
+  @container.injectLookup()
   foo: string;
 
-  @container.inject('barx')
+  @container.injectLookup('barx')
   bar: string;
 }
 customElements.define('x-child', XChild);

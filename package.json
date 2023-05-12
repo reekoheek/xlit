@@ -4,13 +4,8 @@
   "private": true,
   "description": "",
   "scripts": {
-    "prepare": "husky install",
-    "clean": "(cd packages/router && npm run clean) && (cd packages/di && npm run clean) && (cd packages/form && npm run clean)",
-    "test": "(cd packages/router && npm test) && (cd packages/di && npm test) && (cd packages/form && npm test)",
-    "new-version": "lerna version --conventional-commits --yes",
-    "diff": "lerna diff",
-    "lint": "eslint .",
-    "lpub": "lerna publish --force-publish"
+    "changeset": "changeset",
+    "release": "pnpm -r build && pnpm changeset publish"
   },
   "repository": {
     "type": "git",
@@ -23,15 +18,14 @@
   },
   "homepage": "https://github.com/reekoheek/xlit#readme",
   "devDependencies": {
+    "@changesets/cli": "^2.26.1",
     "@open-wc/testing": "^3.1.8",
+    "@types/mocha": "^10.0.1",
     "@web/dev-server-esbuild": "^0.4.1",
     "@web/test-runner": "^0.16.1",
     "eslint-config-xinix": "^2.0.1",
-    "husky": "^8.0.3",
-    "lerna": "^6.6.2",
-    "lint-staged": "^13.2.2",
     "typescript": "^5.0.4",
-    "vite": "^4.3.4"
+    "vite": "^4.3.5"
   },
   "lint-staged": {
     "*.{mjs,js,ts}": "eslint"

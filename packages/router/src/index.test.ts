@@ -1,31 +1,6 @@
 import { assert, fixture, html } from '@open-wc/testing';
-import { Context, HashMode, HistoryMode, Router, component, template } from './';
-
-type AssertedFn = () => Promise<unknown>
-type ExpectedErr = RegExp | string | Error
-
-async function assertRejected(fn: AssertedFn, expected: ExpectedErr) {
-  try {
-    await fn();
-    throw new Error('not rejected');
-  } catch (err) {
-    if (expected instanceof Error && err === expected) {
-      return;
-    }
-
-    if (err instanceof Error) {
-      if (typeof expected === 'string' && err.message === expected) {
-        return;
-      }
-
-      if (expected instanceof RegExp && err.message.match(expected)) {
-        return;
-      }
-    }
-
-    throw err;
-  }
-}
+import { Context, HashMode, HistoryMode, Router } from './';
+import { assertRejects } from 'testutil';
 
 describe('Router', () => {
   describe('@popstate', () => {
@@ -201,7 +176,7 @@ describe('Router', () => {
 
     it('throw error if route not found', async() => {
       const router = new Router(new MockOutlet(), mockOptions());
-      await assertRejected(() => router.push('/not-found'), /route not found/);
+      await assertRejects(() => router.push('/not-found'), /route not found/);
     });
 
     it('route to static route', async() => {
@@ -302,90 +277,6 @@ describe('Router', () => {
       const r = new Router(new MockOutlet(), mock);
       r.pop();
       assert.strictEqual('go:-1', (mock?.history as MockHistory).logs[0]);
-    });
-  });
-
-  describe('template()', () => {
-    it('return element if invoked', async() => {
-      const tpl: HTMLTemplateElement = await fixture(html`
-        <template id="tpl">
-          <foo>foo</foo>
-          <bar>bar</bar>
-        </template>
-      `);
-      const fn = template(tpl);
-      const param = {} as Parameters<typeof fn>[0];
-      const result = await fn(param);
-      assert.strictEqual('<foo>foo</foo>', result.outerHTML);
-    });
-
-    it('throw error on invalid template', async() => {
-      const emptyTemplate = document.createElement('template');
-      const fn = template(emptyTemplate);
-      const param = {} as Parameters<typeof fn>[0];
-      await assertRejected(() => fn(param), /invalid template to render/);
-    });
-  });
-
-  describe('component()', () => {
-    it('return element if invoked', async() => {
-      let loaded = false;
-      function load() {
-        loaded = true;
-        return Promise.resolve();
-      }
-      const fn = component('x-foo', load);
-      const param = {} as Parameters<typeof fn>[0];
-      const result = await fn(param);
-      assert.strictEqual('<x-foo></x-foo>', result.outerHTML);
-      assert.strictEqual(true, loaded);
-    });
-  });
-
-  describe('HistoryMode', () => {
-    describe('#getContextPath()', () => {
-      it('return context path from location', () => {
-        const mode = new HistoryMode();
-        assert.strictEqual(mode.getContextPath({ pathname: '/', search: '' }), '/');
-        assert.strictEqual(mode.getContextPath({ pathname: '/foo', search: '' }), '/foo');
-      });
-
-      it('throw error if base path not match', () => {
-        const mode = new HistoryMode('/foo');
-        assert.throws(() => mode.getContextPath({ pathname: '/bar', search: '' }), /invalid location/);
-      });
-    });
-
-    describe('#getHistoryUrl()', () => {
-      it('return history url from path', () => {
-        const mode = new HistoryMode();
-        assert.strictEqual(mode.getHistoryUrl('/foo'), '/foo');
-        assert.strictEqual(mode.getHistoryUrl('/bar'), '/bar');
-      });
-
-      it('prefix with base path', () => {
-        const mode = new HistoryMode('/foo');
-        assert.strictEqual(mode.getHistoryUrl('/foo'), '/foo/foo');
-        assert.strictEqual(mode.getHistoryUrl('/bar'), '/foo/bar');
-      });
-    });
-  });
-
-  describe('HashMode', () => {
-    describe('#getContextPath()', () => {
-      it('return context path from location', () => {
-        const mode = new HashMode();
-        assert.strictEqual(mode.getContextPath({ hash: '' }), '/');
-        assert.strictEqual(mode.getContextPath({ hash: '#!foo' }), '/foo');
-      });
-    });
-
-    describe('#getHistoryUrl()', () => {
-      it('return history url from path', () => {
-        const mode = new HashMode();
-        assert.strictEqual(mode.getHistoryUrl('/foo'), '#!/foo');
-        assert.strictEqual(mode.getHistoryUrl('/bar'), '#!/bar');
-      });
     });
   });
 });

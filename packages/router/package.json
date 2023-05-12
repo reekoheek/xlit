@@ -1,24 +1,25 @@
 {
   "name": "@xlit/router",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "xlit router custom element",
   "type": "module",
-  "main": "index.js",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
-    "/*.d.ts",
-    "/*.js.map",
-    "/index.js"
+    "/dist/"
   ],
   "scripts": {
-    "prepublish": "npm run clean; npm run build",
-    "clean": "rm -rf index.js index.js.map index.d.ts examples",
-    "lint": "eslint ./src",
-    "build": "tsc",
-    "test": "wtr './src/**/*.test.ts' --node-resolve --coverage",
-    "examples": "vite ./src/examples"
+    "prepublish": "pnpm clean; pnpm test && pnpm build",
+    "clean": "rm -rf dist coverage",
+    "lint": "pnpm lint:eslint && pnpm lint:ts",
+    "lint:eslint": "eslint ./src",
+    "lint:ts": "tsc --noEmit",
+    "build": "pnpm lint && pnpm build:js && pnpm build:types",
+    "build:js": "esbuild ./src/index.ts --bundle --format=esm --minify --sourcemap --outdir=./dist",
+    "build:types": "tsc --emitDeclarationOnly",
+    "test": "wtr",
+    "examples": "vite ./examples"
   },
   "repository": {
     "type": "git",
@@ -37,5 +38,9 @@
   "homepage": "https://github.com/reekoheek/xlit#readme",
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.18",
+    "testutil": "workspace:*"
   }
 }

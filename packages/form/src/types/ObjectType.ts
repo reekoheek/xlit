@@ -1,6 +1,4 @@
-import { Type } from './Type';
-import { ValidationError } from './ValidationError';
-import { Maybe } from './utils/Maybe';
+import { Type, ValidationError, Maybe } from '../';
 
 type Validate = (value: unknown) => boolean;
 type ObjectLike = Record<string, unknown>;

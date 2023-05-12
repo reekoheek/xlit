@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { Form } from '../Form';
-import { StringType } from '../StringType';
+import { Form } from '../src/index';
+import { StringType } from '../src/types/StringType';
 
 interface Model {
   foo?: string;

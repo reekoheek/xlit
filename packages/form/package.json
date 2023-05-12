@@ -1,28 +1,47 @@
 {
   "name": "@xlit/form",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "xlit form custom element",
   "type": "module",
-  "main": "index.js",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types/BooleanType.js": {
+      "default": "./dist/types/BooleanType.js",
+      "types": "./dist/types/BooleanType.d.ts"
+    },
+    "./types/NumberType.js": {
+      "default": "./dist/types/NumberType.js",
+      "types": "./dist/types/NumberType.d.ts"
+    },
+    "./types/ObjectType.js": {
+      "default": "./dist/types/ObjectType.js",
+      "types": "./dist/types/ObjectType.d.ts"
+    },
+    "./types/StringType.js": {
+      "default": "./dist/types/StringType.js",
+      "types": "./dist/types/StringType.d.ts"
+    }
+  },
   "sideEffects": false,
   "files": [
-    "/*.d.ts",
-    "/*.js.map",
-    "!/*.test.*",
-    "/index.js",
-    "/Form.js",
-    "/*Type.js",
-    "/*Error.js"
+    "/dist/"
   ],
   "scripts": {
-    "prepublish": "npm run clean; npm run build",
-    "clean": "rm -rf index.js Form.js *Type.js ValidationError.js *.js.map *.d.ts *.test.js examples asserts utils",
-    "lint": "eslint ./src",
-    "build": "tsc",
-    "test": "wtr --files './src/**/*.test.ts' --node-resolve --coverage",
-    "examples": "vite ./src/examples"
+    "prepublish": "pnpm clean; pnpm test && pnpm build",
+    "clean": "rm -rf dist coverage",
+    "lint": "pnpm lint:eslint && pnpm lint:ts",
+    "lint:eslint": "eslint ./src",
+    "lint:ts": "tsc --noEmit",
+    "build": "pnpm lint && pnpm build:js && pnpm build:types",
+    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --bundle --format=esm --minify --sourcemap --outdir=./dist",
+    "build:types": "tsc --emitDeclarationOnly",
+    "test": "wtr",
+    "examples": "vite ./examples"
   },
   "repository": {
     "type": "git",
@@ -44,5 +63,9 @@
   },
   "dependencies": {
     "lit": "^2.7.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.18",
+    "testutil": "workspace:*"
   }
 }

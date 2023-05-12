@@ -1,5 +1,5 @@
 import { ValidationError } from './ValidationError';
-import { Maybe } from './utils/Maybe';
+import { Maybe } from './Maybe';
 
 type Filter<TValue> = (value: Maybe<TValue>) => Promise<Maybe<TValue>>;
 

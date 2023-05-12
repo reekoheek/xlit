@@ -1,12 +1,4 @@
+.DS_Store
 /coverage
 /node_modules
-/examples
-/asserts
-/utils
-/index.js
-/Form.js
-/*Type.js
-/*Error.js
-/*.test.js
-/*.js.map
-/*.d.ts
+/dist

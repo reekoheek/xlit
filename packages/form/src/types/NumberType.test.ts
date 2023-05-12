@@ -1,6 +1,6 @@
 import { NumberType } from './NumberType';
 import { assert } from '@open-wc/testing';
-import { assertRejects } from './asserts/assertRejects';
+import { assertRejects } from 'testutil';
 
 describe('NumberType', () => {
   describe('#cast()', () => {

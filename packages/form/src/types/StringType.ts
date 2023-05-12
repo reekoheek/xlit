@@ -1,6 +1,4 @@
-import { Type } from './Type';
-import { ValidationError } from './ValidationError';
-import { Maybe } from './utils/Maybe';
+import { Type, ValidationError, Maybe } from '../';
 
 export class StringType extends Type<string> {
   cast(value: unknown): Maybe<string> {

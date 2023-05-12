@@ -7,7 +7,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./",
+    "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -15,5 +15,5 @@
     "skipLibCheck": true
   },
   "include": ["./src/**/*.ts"],
-  "exclude": []
+  "exclude": ["./**/*.test.ts"]
 }

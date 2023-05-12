@@ -1,31 +1,6 @@
 import { assert, fixture, html } from '@open-wc/testing';
+import { assertRejects } from 'testutil';
 import { Container, instance, singleton, injected } from './index';
-
-type AssertedFn = () => Promise<void>
-type ExpectedErr = RegExp | string | Error
-
-async function assertRejected(fn: AssertedFn, expected: ExpectedErr) {
-  try {
-    await fn();
-    throw new Error('not rejected');
-  } catch (err) {
-    if (expected instanceof Error && err === expected) {
-      return;
-    }
-
-    if (err instanceof Error) {
-      if (typeof expected === 'string' && err.message === expected) {
-        return;
-      }
-
-      if (expected instanceof RegExp && err.message.match(expected)) {
-        return;
-      }
-    }
-
-    throw err;
-  }
-}
 
 describe('Container', () => {
   describe('constructor', () => {
@@ -69,7 +44,7 @@ describe('Container', () => {
         foo: instance('foo'),
       });
       assert.strictEqual(await container.lookup('foo'), 'foo');
-      await assertRejected(() => container.lookup('bar'), /provider not found to lookup "bar"/);
+      await assertRejects(() => container.lookup('bar'), /provider not found to lookup "bar"/);
     });
   });
 

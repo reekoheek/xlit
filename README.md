@@ -5,7 +5,7 @@ Set of custom elements for web applications.
 ## Packages
 
 ```bash
-npm i @xlit/router
-npm i @xlit/di
-npm i @xlit/form
+pnpm add @xlit/router
+pnpm add @xlit/di
+pnpm add @xlit/form
 ```

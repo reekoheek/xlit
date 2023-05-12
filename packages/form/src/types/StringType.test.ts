@@ -1,6 +1,6 @@
 import { StringType } from './StringType';
 import { assert } from '@open-wc/testing';
-import { assertRejects } from './asserts/assertRejects';
+import { assertRejects } from 'testutil';
 
 describe('StringType', () => {
   describe('#cast()', () => {

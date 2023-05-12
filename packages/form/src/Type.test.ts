@@ -1,6 +1,6 @@
 import { Type } from './Type';
-import { assertRejects } from './asserts/assertRejects';
-import { Maybe } from './utils/Maybe';
+import { assertRejects } from 'testutil';
+import { Maybe } from './Maybe';
 import { assert } from '@open-wc/testing';
 
 describe('Type', () => {
