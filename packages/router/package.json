@@ -41,7 +41,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "esbuild": "^0.17.18",
+    "esbuild": "^0.17.19",
     "testutil": "workspace:*"
   }
 }

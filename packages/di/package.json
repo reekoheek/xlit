@@ -59,8 +59,8 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.1",
-    "esbuild": "^0.17.18",
-    "wireit": "^0.9.5",
-    "testutil": "workspace:*"
+    "esbuild": "^0.17.19",
+    "testutil": "workspace:*",
+    "wireit": "^0.9.5"
   }
 }

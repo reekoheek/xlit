@@ -64,11 +64,12 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "lit": "^2.7.4"
-  },
   "devDependencies": {
-    "esbuild": "^0.17.18",
+    "esbuild": "^0.17.19",
+    "lit": "^2.7.4",
     "testutil": "workspace:*"
+  },
+  "peerDependencies": {
+    "lit": "^2.7.4"
   }
 }

@@ -4,9 +4,12 @@
   "private": true,
   "description": "",
   "scripts": {
+    "clean": "pnpm -r clean",
+    "lint": "pnpm -r lint",
     "test": "pnpm -r --workspace-concurrency=1 test",
     "changeset": "changeset",
-    "release": "pnpm -r build && pnpm changeset version && pnpm changeset publish"
+    "build": "pnpm -r build",
+    "release": "pnpm build && pnpm changeset version && pnpm changeset publish"
   },
   "repository": {
     "type": "git",
@@ -26,6 +29,6 @@
     "@web/test-runner": "^0.16.1",
     "eslint-config-xinix": "^2.0.1",
     "typescript": "^5.0.4",
-    "vite": "^4.3.5"
+    "vite": "^4.3.8"
   }
 }
