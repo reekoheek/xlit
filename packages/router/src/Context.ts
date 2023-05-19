@@ -2,6 +2,7 @@ export class Context {
   readonly path: string;
   readonly query: Record<string, string> = {};
   readonly params: Record<string, string> = {};
+  readonly state: Record<string, unknown> = {};
 
   constructor(path: string) {
     const url = new URL(path, 'http://localhost');
@@ -21,5 +22,17 @@ export class Context {
       }
     }
     return true;
+  }
+
+  get<T>(key: string): T | undefined {
+    return this.state[key] as T;
+  }
+
+  set(key: string, value: unknown) {
+    this.state[key] = value;
+  }
+
+  remove(key: string) {
+    delete this.state[key];
   }
 }
