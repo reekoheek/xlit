@@ -1,65 +1,84 @@
-import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { Type } from './Type.js';
 import { ValidationError } from './ValidationError.js';
 
-interface Types {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: Type<any>;
-}
-
-interface KV {
+interface KeyValue {
   [key: string]: unknown;
 }
 
-type Errors = Record<string, string>;
+type Types<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key in keyof Required<T>]: Type<any>;
+};
+
+type Errors<T> = {
+  [key in keyof Partial<T>]: string;
+};
+
+type State<T> = Partial<T>;
 
 type SubmitHandler<TModel> = (model: TModel) => unknown;
+type UpdateHandler = () => unknown;
 
-export class Form<TModel = KV> implements ReactiveController {
-  model: TModel = {} as TModel;
-  errors: Errors = {};
+export class Form<TModel = KeyValue> {
+  private _state: State<TModel> = {} as State<TModel>;
+  private _errors: Errors<TModel> = {} as Errors<TModel>;
+  private updateHandlers: UpdateHandler[] = [];
+
+  get state() {
+    return this._state as Readonly<State<TModel>>;
+  }
+
+  get errors() {
+    return this._errors as Readonly<Errors<TModel>>;
+  }
 
   get invalid() {
-    return Object.keys(this.errors).length !== 0;
+    return Object.keys(this._errors).length !== 0;
   }
 
-  constructor(private types: Types, private host?: ReactiveControllerHost) {
-    this.host?.addController(this);
+  constructor(private types: Types<TModel>, updateHandler?: UpdateHandler) {
+    if (updateHandler) {
+      this.addUpdateHandler(updateHandler);
+    }
   }
 
-  hostConnected(): void {
-    // noop
+  addUpdateHandler(updateHandler: UpdateHandler) {
+    this.updateHandlers.push(updateHandler);
+    return this;
   }
 
-  hostDisconnected(): void {
-    // noop
+  removeUpdateHandler(updateHandler: UpdateHandler) {
+    const index = this.updateHandlers.indexOf(updateHandler);
+    if (index !== -1) {
+      this.updateHandlers.splice(index, 1);
+    }
   }
 
-  async set(key: string, value: unknown): Promise<void> {
-    const model = this.model as KV;
+  async set(key: keyof Types<TModel>, value: unknown): Promise<void> {
+    const state = this._state;
     const type = this.types[key];
+
     try {
-      delete this.errors[key];
+      delete this._errors[key];
       value = type.cast(value);
       value = await type.resolve(value);
     } catch (err) {
-      this.errors[key] = (err as Error).message;
+      this._errors[key] = (err as Error).message;
     } finally {
-      if (value === undefined) {
-        delete model[key];
-      } else {
-        model[key] = value;
+      state[key] = value as TModel[typeof key];
+      if (value === undefined || value === null) {
+        delete state[key];
       }
     }
   }
 
-  handleInput(key: string): EventListener {
+  handleInput(key: keyof Types<TModel>): EventListener {
     return async(evt) => {
       try {
         const value = (evt.target as HTMLInputElement).value;
         await this.set(key, value);
       } finally {
-        this.host?.requestUpdate();
+        this.update();
       }
     };
   }
@@ -69,21 +88,25 @@ export class Form<TModel = KV> implements ReactiveController {
       try {
         evt.preventDefault();
         await this.assert();
-        fn(this.model);
+        fn(this._state as TModel);
       } catch (err) {
-        this.host?.requestUpdate();
+        this.update();
       }
     };
   }
 
   async assert(): Promise<void> {
-    const model = this.model as KV;
+    const state = this._state as KeyValue;
     await Promise.all(Object.keys(this.types).map(async(key) => {
-      await this.set(key, model[key]);
+      await this.set(key as keyof TModel, state[key]);
     }));
 
     if (this.invalid) {
       throw new ValidationError('invalid form');
     }
+  }
+
+  protected update() {
+    this.updateHandlers.forEach((update) => update());
   }
 }
