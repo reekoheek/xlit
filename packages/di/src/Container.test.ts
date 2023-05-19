@@ -1,6 +1,6 @@
 import { assert, fixture, html } from '@open-wc/testing';
 import { assertRejects } from 'testutil';
-import { Container, instance, singleton, injected } from './index';
+import { Container, instance, injected } from './index';
 
 describe('Container', () => {
   describe('constructor', () => {
@@ -14,65 +14,74 @@ describe('Container', () => {
     });
   });
 
-  describe('#provide()', () => {
+  describe('#addProvider()', () => {
     it('add provider', async() => {
       const container = new Container();
       let hit = 0;
-      container.provide('obj', (c) => {
+      container.addProvider('obj', (c) => {
         assert.strictEqual(c, container);
         hit++;
         return hit;
       });
-      assert.strictEqual(1, await container.lookup('obj'));
-      assert.strictEqual(2, await container.lookup('obj'));
+      assert.strictEqual(1, await container.get('obj'));
+      assert.strictEqual(2, await container.get('obj'));
     });
   });
 
-  describe('#unprovide()', () => {
-    it('remove provider', () => {
+  describe('#get()', () => {
+    it('get instance', async() => {
       const container = new Container({
         foo: instance('foo'),
       });
-      container.unprovide('foo');
-      assert.strictEqual(container['fns'].foo, undefined);
+      assert.strictEqual(await container.get('foo'), 'foo');
+      await assertRejects(() => container.get('bar'), /provider not found to get "bar"/);
     });
   });
 
-  describe('#lookup()', () => {
-    it('lookup instance', async() => {
+  describe('@inject()', () => {
+    it('inject class', async() => {
       const container = new Container({
         foo: instance('foo'),
       });
-      assert.strictEqual(await container.lookup('foo'), 'foo');
-      await assertRejects(() => container.lookup('bar'), /provider not found to lookup "bar"/);
+
+      @container.inject()
+      class Component {
+        @container.lookup()
+        foo!: string;
+      }
+
+      assert.strictEqual(!!container['fns'].component, true);
+      const component: Component = await container.get('component');
+      assert.strictEqual(component instanceof Component, true);
+      assert.strictEqual(component.foo, 'foo');
     });
   });
 
-  describe('@injectProvide()', () => {
+  describe('@provide()', () => {
     it('inject property to provide', async() => {
       const container = new Container();
 
-      @container.injectable()
+      @container.inject()
       class Component {
-        @container.injectProvide()
+        @container.provide()
         foo = 'foo';
       }
 
       const obj = new Component();
       await injected(obj);
-      assert.strictEqual(await container.lookup('foo'), 'foo');
+      assert.strictEqual(await container.get('foo'), 'foo');
     });
   });
 
-  describe('@injectLookup()', () => {
+  describe('@lookup()', () => {
     it('inject property from lookup', async() => {
       const container = new Container({
         foo: instance('foo'),
       });
 
-      @container.injectable()
+      @container.inject()
       class Component {
-        @container.injectLookup()
+        @container.lookup()
         foo: string;
       }
 
@@ -86,38 +95,15 @@ describe('Container', () => {
         foo: instance('foo'),
       });
 
-      @container.injectable()
+      @container.inject()
       class TDIElement extends HTMLElement {
-        @container.injectLookup()
+        @container.lookup()
         foo!: string;
       }
       customElements.define('tdi-lookup', TDIElement);
 
       const el = await fixture(html`<tdi-lookup></tdi-lookup>`);
       assert.strictEqual(el['foo'], 'foo');
-    });
-  });
-
-  describe('instance()', () => {
-    it('generate provider to instance', async() => {
-      const fn = instance('foo');
-      assert.strictEqual('foo', await fn(new Container()));
-    });
-  });
-
-  describe('singleton()', () => {
-    it('generate singleton provider', () => {
-      let i = 0;
-      const fn = singleton(() => i++);
-      assert.strictEqual(0, fn(new Container()));
-      assert.strictEqual(0, fn(new Container()));
-    });
-  });
-
-  describe('injected()', () => {
-    it('return promise', () => {
-      assert.strictEqual(injected({ __diInjected: Promise.resolve() }) instanceof Promise, true);
-      assert.throws(() => injected({}), /object.is not injectable/);
     });
   });
 });

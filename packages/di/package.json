@@ -13,14 +13,30 @@
   "scripts": {
     "prepublish": "pnpm clean; pnpm build",
     "clean": "rm -rf coverage index.js *.d.ts *.map",
-    "lint": "pnpm lint:eslint && pnpm lint:ts",
+    "lint": "wireit",
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
-    "build": "pnpm lint && pnpm build:js && pnpm build:types",
+    "build": "wireit",
     "build:js": "esbuild ./src/index.ts --bundle --platform=neutral --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
+    "test:watch": "wtr --watch",
     "examples": "vite ./examples"
+  },
+  "wireit": {
+    "lint": {
+      "dependencies": [
+        "lint:eslint",
+        "lint:ts"
+      ]
+    },
+    "build": {
+      "dependencies": [
+        "lint",
+        "build:js",
+        "build:types"
+      ]
+    }
   },
   "repository": {
     "type": "git",

@@ -18,16 +18,13 @@ Implement container
 import { Container, instance, singleton } from '@xlit/di';
 
 const container = new Container({
-  foo: () => 'foo',
-  bar: instance('bar'),
-  baz: singleton(() => 'baz'),
-});
+    foo: () => 'foo',
+    bar: instance('bar'),
+    baz: singleton(() => 'baz'),
+  })
+  .addProvider('other', instance('other instance'));
 
-(async () => {
-  container.provide('other', instanec('other instance'));
-
-  const foo = await container.lookup('foo');
-})();
+const foo = await container.lookup('foo');
 ```
 
 ```js
@@ -35,15 +32,15 @@ const container = new Container({
 
 import { container } from './container.js';
 
-@container.injectable()
+@container.inject()
 class XApp extends HTMLElement {
-  @container.injectProvide()
+  @container.provide()
   foox = 'foox';
 
-  @container.injectProvide('barx')
+  @container.provide('barx')
   _barx = 'barx';
 
-  @container.injectProvide()
+  @container.provide()
   bazx = () => 'bazx';
 }
 customElements.define('x-app', XApp);
@@ -54,12 +51,12 @@ Child elements can lookup and inject container data with `lookup` decorator
 ```js
 import { container } from './container.js';
 
-@container.injectable()
+@container.inject()
 class XChild extends HTMLElement {
-  @container.injectLookup()
+  @container.lookup()
   foo: string;
 
-  @container.injectLookup('barx')
+  @container.lookup('barx')
   bar: string;
 }
 customElements.define('x-child', XChild);
