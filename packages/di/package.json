@@ -1,6 +1,6 @@
 {
   "name": "@xlit/di",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "xlit dependency injection custom element",
   "type": "module",
   "main": "index.js",
@@ -17,7 +17,7 @@
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
     "build": "wireit",
-    "build:js": "esbuild ./src/index.ts --bundle --platform=neutral --minify --sourcemap --outdir=./",
+    "build:js": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
     "test:watch": "wtr --watch",
@@ -58,9 +58,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.1",
-    "esbuild": "^0.17.19",
-    "testutil": "workspace:*",
-    "wireit": "^0.9.5"
+    "testutil": "workspace:*"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "testutil",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,14 +10,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "nyc --reporter=html mocha --extension ts -r esr-register.js './src/**/*.test.ts'"
+    "test": "nyc --reporter=html mocha --extension ts -r esbuild-register './src/**/*.test.ts'"
   },
   "keywords": [],
   "author": "Ganesha <reekoheek@gmail.com>",
-  "license": "MIT",
-  "devDependencies": {
-    "esbuild-runner": "^2.2.2",
-    "mocha": "^10.2.0",
-    "nyc": "^15.1.0"
-  }
+  "license": "MIT"
 }

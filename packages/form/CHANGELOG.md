@@ -1,5 +1,11 @@
 # @xlit/form
 
+## 2.2.1
+
+### Patch Changes
+
+- fix(di): decorator error with ts5
+
 ## 2.2.0
 
 ### Minor Changes

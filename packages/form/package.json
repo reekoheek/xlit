@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./index.js",
@@ -40,7 +40,7 @@
     "lint:eslint": "eslint ./src",
     "lint:ts": "tsc --noEmit",
     "build": "pnpm lint && pnpm build:js && pnpm build:types",
-    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
+    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
     "test:watch": "wtr --watch"
@@ -64,7 +64,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "esbuild": "^0.17.19",
     "lit": "^2.7.4",
     "testutil": "workspace:*"
   },
