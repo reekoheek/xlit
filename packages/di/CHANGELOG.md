@@ -1,5 +1,17 @@
 # Change Log
 
+## 2.1.0
+
+### Minor Changes
+
+- chore(form): minify
+
+## 2.0.4
+
+### Patch Changes
+
+- refactor all
+
 ## 2.0.3
 
 ### Patch Changes
