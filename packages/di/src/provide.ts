@@ -9,7 +9,7 @@ interface ProvideOptions {
 
 export function provide(opts?: ProvideOptions) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (target: any, ctx: unknown) => {
+  return (target: any, ctx?: unknown) => {
     if (typeof ctx === 'object') throw new DIError('unimplemented new decorator spec');
 
     if (isConstructor(target)) {

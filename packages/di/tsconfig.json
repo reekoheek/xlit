@@ -6,6 +6,7 @@
     "sourceMap": true,
     "outDir": "./",
     "strict": true,
+    "noImplicitAny": true,
     "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
