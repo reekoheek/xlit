@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.2.0
+
+### Minor Changes
+
+- new di api
+
 ## 2.1.0
 
 ### Minor Changes
