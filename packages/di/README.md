@@ -22,7 +22,7 @@ const container = new Container({
     bar: instance('bar'),
     baz: singleton(() => 'baz'),
   })
-  .addProvider('other', instance('other instance'));
+  .provide('other', instance('other instance'));
 
 const foo = await container.lookup('foo');
 ```
@@ -32,15 +32,15 @@ const foo = await container.lookup('foo');
 
 import { container } from './container.js';
 
-@container.inject()
+@inject(container)
 class XApp extends HTMLElement {
-  @container.provide()
+  @provide()
   foox = 'foox';
 
-  @container.provide('barx')
+  @provide('barx')
   _barx = 'barx';
 
-  @container.provide()
+  @provide()
   bazx = () => 'bazx';
 }
 customElements.define('x-app', XApp);
@@ -51,12 +51,12 @@ Child elements can lookup and inject container data with `lookup` decorator
 ```js
 import { container } from './container.js';
 
-@container.inject()
+@inject(container)
 class XChild extends HTMLElement {
-  @container.lookup()
+  @lookup()
   foo: string;
 
-  @container.lookup('barx')
+  @lookup('barx')
   bar: string;
 }
 customElements.define('x-child', XChild);

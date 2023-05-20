@@ -1,12 +1,12 @@
-import { Container, injected, instance } from '../src';
+import { Container, inject, injected, instance, lookup } from '../src';
 
 const container = new Container({
   bar: instance('bar'),
 });
 
-@container.injectable()
+@inject(container)
 class Foo {
-  @container.injectLookup()
+  @lookup()
   bar!: string;
 }
 

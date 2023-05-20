@@ -1,14 +1,11 @@
 import { DIError } from './DIError.js';
-import { Injectable } from './Injectable.js';
+import { Injectable } from './Metadata.js';
 
-function isInjectable(o: unknown): o is Injectable {
-  return (o as Injectable).__diInjected !== undefined;
-}
-
-export function injected(obj: unknown): Promise<unknown> {
-  if (!isInjectable(obj)) {
-    throw new DIError('object is not injectable');
+export function injected(obj: object) {
+  const injectable = obj as Injectable;
+  if (!injectable.__diInjected) {
+    throw new DIError('object is not injected');
   }
 
-  return obj.__diInjected;
+  return injectable.__diInjected;
 }
