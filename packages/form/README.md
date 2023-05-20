@@ -13,32 +13,31 @@ npm i @xlit/form
 ```typescript
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { Form } from '@xlit/form';
-import { trim, required } from '@xlit/form/validators.js';
+import { FormController } from '@xlit/form';
 
 interface Model {
-  foo?: string;
-  bar?: string;
+  foo: string;
+  bar: string;
 }
 
 @customElement('page-foo')
 class PageFoo extends LitElement {
-  form = new Form<Model>({
+  form = new FormController<Model>(this, {
     foo: new StringType().required(),
     bar: new StringType().required(),
-  }, this);
+  });
 
   render (): unknown {
     <form @submit="${this.form.submit(this.onSubmit)}">
       <div>
         <label>Foo</label>
-        <input type="text" value="${this.form.model.foo ?? ''}" @input="${this.form.input('foo')}">
+        <input type="text" ${this.form.field('foo')}>
         <span class="form-text">${this.form.errors.foo}</span>
       </div>
 
       <div>
         <label>Bar</label>
-        <input type="text" value="${this.form.model.bar ?? ''}" @input="${this.form.input('bar')}">
+        <input type="text" ${this.form.field('bar')}>
         <span class="form-text">${this.form.errors.bar}</span>
       </div>
     </form>

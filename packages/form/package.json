@@ -43,8 +43,7 @@
     "build:js": "esbuild ./src/index.ts ./src/types/*.ts --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
-    "test:watch": "wtr --watch",
-    "examples": "vite ./examples"
+    "test:watch": "wtr --watch"
   },
   "repository": {
     "type": "git",

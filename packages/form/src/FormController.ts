@@ -1,6 +1,7 @@
 import { ElementPart, ReactiveController, ReactiveControllerHost, noChange } from 'lit';
 import { Form } from './Form.js';
 import { Directive, DirectiveResult, PartInfo, PartType, directive } from 'lit/directive.js';
+import { FormError } from './FormError.js';
 
 interface FieldElement extends Element {
   value?: unknown;
@@ -14,7 +15,7 @@ class FieldDirective extends Directive {
     super(partInfo);
 
     if (partInfo.type !== PartType.ELEMENT) {
-      throw new Error('field directive must be used in element');
+      throw new FormError('field directive must be used in element');
     }
   }
 
