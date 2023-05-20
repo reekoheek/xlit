@@ -1,8 +1,10 @@
+import { RouterError } from './RouterError.js';
+
 export class Context {
   readonly path: string;
   readonly query: Record<string, string> = {};
   readonly params: Record<string, string> = {};
-  readonly state: Record<string, unknown> = {};
+  private readonly state: Record<string, unknown> = {};
 
   constructor(path: string) {
     const url = new URL(path, 'http://localhost');
@@ -29,6 +31,9 @@ export class Context {
   }
 
   set(key: string, value: unknown) {
+    if (value === undefined || value === null) {
+      throw new RouterError('cannot set state to empty, do you mean to remove state?');
+    }
     this.state[key] = value;
   }
 

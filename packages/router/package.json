@@ -20,6 +20,7 @@
     "build:js": "esbuild ./src/index.ts --bundle --format=esm --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "wtr",
+    "test:watch": "wtr --watch",
     "examples": "vite ./examples"
   },
   "repository": {
