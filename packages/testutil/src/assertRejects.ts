@@ -1,11 +1,14 @@
 type AssertedFn = () => Promise<unknown> | NonNullable<unknown> | void;
 type Expected = RegExp | string | Error;
 
+class AssertError extends Error {
+}
+
 export async function assertRejects(fn: AssertedFn, expected?: Expected) {
   try {
     await fn();
 
-    throw new Error('not rejected');
+    throw new AssertError('not rejected');
   } catch (err) {
     assertIsNotRejectedError(err);
 
@@ -30,7 +33,7 @@ export async function assertRejects(fn: AssertedFn, expected?: Expected) {
 }
 
 function assertIsNotRejectedError(err: unknown) {
-  if (err instanceof Error && err.message === 'not rejected') {
+  if (err instanceof AssertError && err.message === 'not rejected') {
     throw err;
   }
 }
