@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./index.js",
@@ -67,7 +67,7 @@
     "lit": "^2.7.4",
     "testutil": "workspace:*"
   },
-  "peerDependencies": {
+  "dependencies": {
     "lit": "^2.7.4"
   }
 }

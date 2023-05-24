@@ -1,6 +1,6 @@
 {
   "name": "@xlit/grid",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./index.js",
@@ -8,8 +8,7 @@
   "sideEffects": false,
   "files": [
     "/index.{js,js.map}",
-    "/*.{d.ts,d.ts.map}",
-    "/types/"
+    "/*.{d.ts,d.ts.map}"
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm build",
@@ -44,5 +43,8 @@
   },
   "devDependencies": {
     "testutil": "workspace:*"
+  },
+  "dependencies": {
+    "lit": "^2.7.4"
   }
 }

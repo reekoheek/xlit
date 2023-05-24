@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.3.0
+
+### Minor Changes
+
+- release grid
+
 ## 2.2.2
 
 ### Patch Changes
