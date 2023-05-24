@@ -1,79 +1,68 @@
 import { LitElement, html } from 'lit';
 import '../src/index';
+import './index.css';
+
+interface Item {
+  label: string;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+}
+
+function random(start: number, end: number): number {
+  const seed = end - start + 1;
+  return Math.floor(Math.random() * seed) + start;
+}
 
 export class App extends LitElement {
+  nextLabel = 0;
+  items: Item[] = [];
+
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    for (let i = 0; i < 10; i++) {
+      this.items.push(this.generateItem());
+    }
+  }
+
   protected render(): unknown {
     return html`
-      <style>
-        * {
-          box-sizing: border-box;
-        }
-
-        x-app {
-          display: flex;
-          flex-direction: column;
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          right: 0;
-        }
-
-        nav {
-          padding: 5px;
-        }
-
-        main {
-          flex: 1;
-          position: relative;
-        }
-
-        xlit-grid {
-          /* border: 20px solid red; */
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          overflow-x: hidden;
-          overflow-y: auto;
-        }
-
-        .card {
-          background-color: blue;
-          height: 100%;
-          display: flex;
-        }
-
-        .card .text {
-          color: white;
-          margin: auto;
-        }
-      </style>
-
       <nav>
-        <button>Add</button>
+        <button @click="${this.addClicked}">Add</button>
       </nav>
       <main>
         <xlit-grid>
-          <div class="card" x="0" y="0" w="4" h="4">
-            <span class="text">0</span>
-          </div>
-          <div class="card">
-            <span class="text">1</span>
-          </div>
-          <div class="card" x="1" y="1">
-            <span class="text">2</span>
-          </div>
-          <div class="card">
-            <span class="text">3</span>
-          </div>
-          <div class="card">
-            <span class="text">4</span>
-          </div>
+          ${this.items.map((item) => html`
+            <div class="card" x="${item.x ?? 0}" y="${item.y ?? 0}" w="${item.w ?? 1}" h="${item.h ?? 1}">
+              <span class="text">${item.label}</span>
+            </div>
+          `)}
         </xlit-grid>
       </main>
     `;
+  }
+
+  addClicked(evt: MouseEvent) {
+    evt.preventDefault();
+
+    this.items = [
+      ...this.items,
+      this.generateItem(),
+    ];
+
+    this.requestUpdate();
+  }
+
+  generateItem() {
+    return {
+      label: `${this.nextLabel++}`,
+      x: random(0, 11),
+      y: random(0, 11),
+      w: random(1, 4),
+      h: random(1, 4),
+    };
   }
 
   protected createRenderRoot(): Element | ShadowRoot {

@@ -2,9 +2,24 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { Layout } from './Layout.js';
+import { Layout, ItemCollisionError } from './Layout.js';
 import { Item } from './Item.js';
-import { Dimension, Point } from './types.js';
+import { Dimension, Point, Rect } from './types.js';
+import { GridError } from './GridError.js';
+
+interface ItemElement extends Element {
+  item: Item;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+}
+
+interface DragState {
+  item: Item;
+  offset: Point;
+  pointer: Point;
+}
 
 @customElement('xlit-grid')
 export class Grid extends LitElement {
@@ -36,7 +51,7 @@ export class Grid extends LitElement {
   container!: HTMLElement;
 
   @property()
-  cols = 4;
+  cols = 12;
 
   @property()
   gutter = 5;
@@ -44,27 +59,102 @@ export class Grid extends LitElement {
   @property()
   hfactor = 0.5;
 
-  unitDimension!: Dimension;
-
   @state()
   layout = new Layout(this.cols);
 
-  draggedItem?: Item;
-  draggedOffset?: Point;
+  // do not make it state coz will be problem in chrome when updating dragstate immediate thanks to chrome bug
+  private dragState?: DragState;
+  private nextKey = 0;
+  private mutationObserver: MutationObserver;
+  private unitDimension!: Dimension;
+
+  get unitGutterDimension(): Dimension {
+    return {
+      w: this.unitDimension.w + this.gutter,
+      h: this.unitDimension.h + this.gutter,
+    };
+  }
+
+  constructor() {
+    super();
+    this.mutationObserver = new MutationObserver(() => {
+      if (this.scan()) {
+        this.requestUpdate();
+      }
+    });
+  }
 
   connectedCallback() {
     super.connectedCallback();
 
     this.calculateViewport();
 
-    this.layout = Layout.fromChildren(this.cols, this.children);
+    this.layout = new Layout(this.cols);
+    this.scan();
 
+    // kick mutation observer after scan manually for the first time
+    this.mutationObserver.observe(this, { childList: true });
+
+    // calculate after layout rendered
     requestAnimationFrame(() => {
       this.calculateContainerHeight();
     });
   }
 
-  calculateContainerHeight() {
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    this.mutationObserver.disconnect();
+  }
+
+  scan(): boolean {
+    const elements = ([...this.children] as ItemElement[]).filter((el) => {
+      if (el.item) {
+        return false;
+      }
+
+      const key = `${this.nextKey++}`;
+      el.slot = key;
+      el.setAttribute('draggable', 'true');
+
+      const rect = this.readRectFromItemElement(el);
+      const retryCount = 50;
+      let item = new Item(key, rect);
+      let retries = 0;
+      while (retries++ < retryCount) {
+        try {
+          this.layout.add(item);
+          el.item = item;
+          return true;
+        } catch (err) {
+          if (err === ItemCollisionError) {
+            item = item.clone();
+            item.y = item.y + 1;
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw new GridError(`try positioning item with no luck after ${retryCount} tries`);
+    });
+
+    return Boolean(elements.length);
+  }
+
+  private readRectFromItemElement(el: ItemElement): Rect {
+    let x = el.x ?? (Number(el.getAttribute('x')) || 0);
+    const y = el.y ?? (Number(el.getAttribute('y')) || 0);
+    const w = el.w ?? (Number(el.getAttribute('w')) || 1);
+    const h = el.h ?? (Number(el.getAttribute('h')) || 1);
+
+    if (x + w > this.cols) {
+      x = this.cols - w;
+    }
+
+    return { x, y, w, h };
+  }
+
+  private calculateContainerHeight() {
     const maxHeight = this.layout.maxHeight;
     this.container.style.height = ((maxHeight * this.unitDimension.h) + ((maxHeight - 1) * this.gutter)) + 'px';
   }
@@ -72,21 +162,25 @@ export class Grid extends LitElement {
   protected render() {
     return html`
       <div class="container"
-        @dragstart="${this.dragStarted}"
-        @touchstart="${this.dragStarted}"
-        @dragover="${this.dragged}"
-        @touchmove="${this.dragged}"
-        @drop="${this.dropped}"
-        @touchend="${this.dropped}">
+        @dragstart="${this.handleDragStarted}"
+        @touchstart="${this.handleDragStarted}"
+        @dragover="${this.handleDragged}"
+        @touchmove="${this.handleDragged}"
+        @drop="${this.handleDropped}"
+        @touchend="${this.handleDropped}">
         ${repeat(this.layout.items, (item) => item.key, (item) => this.renderItem(item))}
         ${this.renderShadowItem()}
       </div>
     `;
   }
 
-  renderShadowItem() {
-    if (this.draggedItem) {
-      return html`<div class="shadow-item" style="${this._calculateItemStyle(this.draggedItem)}"></div>`;
+  private renderItem(item: Item) {
+    return html`<div class="item" style="${this._calculateItemStyle(item)}"><slot name="${item.key}"></slot></div>`;
+  }
+
+  private renderShadowItem() {
+    if (this.dragState) {
+      return html`<div class="shadow-item" style="${this._calculateItemStyle(this.dragState.item)}"></div>`;
     }
   }
 
@@ -97,22 +191,12 @@ export class Grid extends LitElement {
     this.unitDimension = { w, h };
   }
 
-  renderItem(item: Item) {
-    return html`
-      <div class="item"
-        item-key="${item.key}"
-        style="${this._calculateItemStyle(item)}"
-        >
-        <slot name="${item.key}"></slot>
-      </div>
-    `;
-  }
-
   private _calculateItemStyle(item: Item) {
-    const left = item.x * (this.unitDimension.w + this.gutter);
-    const top = item.y * (this.unitDimension.h + this.gutter);
-    const width = (this.unitDimension.w * item.w) + ((item.w - 1) * this.gutter);
-    const height = (this.unitDimension.h * item.h) + ((item.h - 1) * this.gutter);
+    const unit = this.unitGutterDimension;
+    const left = item.x * unit.w;
+    const top = item.y * unit.h;
+    const width = (item.w * unit.w) - this.gutter;
+    const height = (item.h * unit.h) - this.gutter;
     return styleMap({
       width: width + 'px',
       height: height + 'px',
@@ -120,11 +204,12 @@ export class Grid extends LitElement {
     });
   }
 
-  dragStarted(evt: DragEvent | TouchEvent) {
-    const draggable = evt.composedPath().find((el) => (el as Element).matches('.item[item-key]')) as Element;
-    if (!draggable) {
+  private handleDragStarted(evt: DragEvent | TouchEvent) {
+    const draggable = evt.composedPath()[0] as ItemElement;
+    if (!draggable?.item) {
       return;
     }
+
     if (evt instanceof DragEvent && evt.dataTransfer) {
       evt.dataTransfer.effectAllowed = 'move';
       const img = document.createElement('img');
@@ -132,76 +217,95 @@ export class Grid extends LitElement {
       evt.dataTransfer.setDragImage(img, 0, 0);
     }
 
-    const key = draggable.getAttribute('item-key');
-    if (!key) {
-      return;
-    }
+    const item = this.layout.get(draggable.item.key);
 
-    const item = this.layout.get(key);
-    this.draggedItem = item;
+    const unit = this.unitGutterDimension;
+    const elX = item.x * unit.w;
+    const elY = item.y * unit.h;
 
-    const elX = this.draggedItem.x * (this.unitDimension.w + this.gutter);
-    const elY = this.draggedItem.y * (this.unitDimension.h + this.gutter);
+    const pointer = eventPointer(evt);
 
-    const clientX = evt instanceof DragEvent ? evt.clientX : evt.touches[0].clientX;
-    const clientY = evt instanceof DragEvent ? evt.clientY : evt.touches[0].clientY;
-    this.draggedOffset = {
-      x: clientX - elX,
-      y: clientY - elY,
+    const offset = {
+      x: pointer.x - elX,
+      y: pointer.y - elY,
     };
+
+    this.dragState = { item, offset, pointer };
 
     requestAnimationFrame(() => {
       this.requestUpdate();
     });
   }
 
-  dragged(evt: DragEvent | TouchEvent) {
+  private handleDragged(evt: DragEvent | TouchEvent) {
     evt.preventDefault();
 
-    if (!this.draggedItem) {
+    if (!this.dragState) {
       return;
     }
 
-    if (!this.draggedOffset) {
+    const pointer = eventPointer(evt);
+    if (this.dragState.pointer.x === pointer.x && this.dragState.pointer.y === pointer.y) {
       return;
     }
 
-    const clientX = evt instanceof DragEvent ? evt.clientX : evt.touches[0].clientX;
-    const clientY = evt instanceof DragEvent ? evt.clientY : evt.touches[0].clientY;
+    this.dragState.pointer = pointer;
 
-    const unit = this.pxToUnit({
-      x: clientX - this.draggedOffset.x,
-      y: clientY - this.draggedOffset.y,
+    const coord = this.pxToUnit({
+      x: pointer.x - this.dragState.offset.x,
+      y: pointer.y - this.dragState.offset.y,
     });
 
-    this.layout.move(this.draggedItem, unit.x, unit.y);
-
-    this.requestUpdate();
-
-    requestAnimationFrame(() => {
-      this.calculateContainerHeight();
-    });
+    try {
+      const item = this.dragState.item.clone();
+      item.x = coord.x;
+      item.y = coord.y;
+      this.layout.move(item);
+      this.requestUpdate();
+      requestAnimationFrame(() => {
+        this.calculateContainerHeight();
+      });
+    } catch (err) {
+      // noop
+    }
   }
 
   private pxToUnit(point: Point): Point {
-    let x = Math.round(point.x / (this.unitDimension.w + this.gutter));
+    const unit = this.unitGutterDimension;
+    let x = Math.round(point.x / unit.w);
     if (x < 0) {
       x = 0;
     } else if (x >= this.cols) {
       x = this.cols - 1;
     }
-    const y = Math.round(point.y / (this.unitDimension.h + this.gutter));
+    const y = Math.round(point.y / unit.h);
     return { x, y };
   }
 
-  dropped(evt: DragEvent) {
+  private handleDropped(evt: DragEvent) {
     evt.preventDefault();
-    if (!this.draggedItem) {
+    if (!this.dragState) {
       return;
     }
 
-    this.draggedItem = undefined;
+    this.dragState = undefined;
 
-    this.requestUpdate();
+    requestAnimationFrame(() => {
+      this.requestUpdate();
+    });
   }
+}
+
+function eventPointer(evt: DragEvent | TouchEvent): Point {
+  if (evt instanceof DragEvent) {
+    return {
+      x: evt.clientX,
+      y: evt.clientY,
+    };
+  }
+
+  return {
+    x: evt.touches[0].clientX,
+    y: evt.touches[0].clientY,
+  };
 }

@@ -19,13 +19,6 @@ export class Item implements Rect {
     this.h = h;
   }
 
-  next(): Item {
-    return new Item(this.key, {
-      ...this,
-      y: this.y + 1,
-    });
-  }
-
   clone(): Item {
     return new Item(this.key, this);
   }

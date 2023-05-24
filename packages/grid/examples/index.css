@@ -1,0 +1,44 @@
+* {
+  box-sizing: border-box;
+}
+
+x-app {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+nav {
+  padding: 5px;
+  border-bottom: 1px solid grey;
+}
+
+main {
+  flex: 1;
+  position: relative;
+}
+
+xlit-grid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.card {
+  background-color: blue;
+  height: 100%;
+  display: flex;
+}
+
+.card .text {
+  color: white;
+  margin: auto;
+}
