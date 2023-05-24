@@ -1,8 +1,5 @@
-import { GridError } from './GridError.js';
+import { GridError, GridItemCollisionError } from './GridError.js';
 import { Item } from './Item.js';
-import { Point } from './types.js';
-
-export const ItemCollisionError = new GridError('item collision found');
 
 export class Layout {
   public readonly items: Item[] = [];
@@ -18,28 +15,11 @@ export class Layout {
   }
 
   add(item: Item) {
-    const itemOutOfBoundError = new GridError('item out of bound');
+    this.assertItemOutOfBound(item);
+    this.assertDuplicateItem(item);
+    this.assertCollisionFound(item);
 
-    if (item.x < 0) {
-      throw itemOutOfBoundError;
-    }
 
-    if (item.y < 0) {
-      throw itemOutOfBoundError;
-    }
-
-    if (item.x + item.w > this.cols) {
-      throw itemOutOfBoundError;
-    }
-
-    if (this.items.find((it) => it.key === item.key)) {
-      throw new GridError('duplicate item key');
-    }
-
-    const collisions = this.getCollisions(item);
-    if (collisions.length) {
-      throw ItemCollisionError;
-    }
     this.items.push(item);
   }
 
@@ -58,12 +38,37 @@ export class Layout {
   move(item: Item) {
     const existing = this.get(item.key);
 
-    const collisions = this.getCollisions(item);
-    if (collisions.length) {
-      throw new GridError('item collision found');
-    }
+    this.assertItemOutOfBound(item);
+    this.assertCollisionFound(item);
 
     existing.x = item.x;
     existing.y = item.y;
+  }
+
+  assertItemOutOfBound(item: Item) {
+    if (item.x < 0) {
+      throw new GridError('item out of bound');
+    }
+
+    if (item.y < 0) {
+      throw new GridError('item out of bound');
+    }
+
+    if (item.x + item.w > this.cols) {
+      throw new GridError('item out of bound');
+    }
+  }
+
+  assertDuplicateItem(item: Item) {
+    if (this.items.find((it) => it.key === item.key)) {
+      throw new GridError('duplicate item key');
+    }
+  }
+
+  assertCollisionFound(item: Item) {
+    const collisions = this.getCollisions(item);
+    if (collisions.length) {
+      throw new GridItemCollisionError('item collision found');
+    }
   }
 }

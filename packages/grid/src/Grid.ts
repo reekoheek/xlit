@@ -2,10 +2,10 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { Layout, ItemCollisionError } from './Layout.js';
+import { Layout } from './Layout.js';
 import { Item } from './Item.js';
 import { Dimension, Point, Rect } from './types.js';
-import { GridError } from './GridError.js';
+import { GridError, GridItemCollisionError } from './GridError.js';
 
 interface ItemElement extends Element {
   item: Item;
@@ -132,7 +132,7 @@ export class Grid extends LitElement {
           el.item = item;
           return true;
         } catch (err) {
-          if (err === ItemCollisionError) {
+          if (err instanceof GridItemCollisionError) {
             item = item.clone();
             item.y = item.y + 1;
             continue;
@@ -160,7 +160,6 @@ export class Grid extends LitElement {
   }
 
   private calculateContainerHeight() {
-    console.log('height calculated');
     const maxHeight = this.layout.maxHeight;
     this.container.style.height = ((maxHeight * this.unitDimension.h) + ((maxHeight - 1) * this.gutter)) + 'px';
   }
@@ -172,7 +171,7 @@ export class Grid extends LitElement {
         @touchstart="${this.handleDragStarted}"
         @dragover="${this.handleDragged}"
         @touchmove="${this.handleDragged}"
-        @drop="${this.handleDropped}"
+        @dragend="${this.handleDropped}"
         @touchend="${this.handleDropped}">
         ${repeat(this.layout.items, (item) => item.key, (item) => this.renderItem(item))}
         ${this.renderShadowItem()}
