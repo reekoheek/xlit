@@ -62,10 +62,11 @@ export class Grid extends LitElement {
   @state()
   layout = new Layout(this.cols);
 
+  private mutationObserver!: MutationObserver;
+  private resizeObserver!: ResizeObserver;
   // do not make it state coz will be problem in chrome when updating dragstate immediate thanks to chrome bug
   private dragState?: DragState;
   private nextKey = 0;
-  private mutationObserver: MutationObserver;
   private unitDimension!: Dimension;
 
   get unitGutterDimension(): Dimension {
@@ -73,15 +74,6 @@ export class Grid extends LitElement {
       w: this.unitDimension.w + this.gutter,
       h: this.unitDimension.h + this.gutter,
     };
-  }
-
-  constructor() {
-    super();
-    this.mutationObserver = new MutationObserver(() => {
-      if (this.scan()) {
-        this.requestUpdate();
-      }
-    });
   }
 
   connectedCallback() {
@@ -93,18 +85,31 @@ export class Grid extends LitElement {
     this.scan();
 
     // kick mutation observer after scan manually for the first time
+    this.mutationObserver = new MutationObserver(() => {
+      if (this.scan()) {
+        this.requestUpdate();
+      }
+    });
     this.mutationObserver.observe(this, { childList: true });
 
-    // calculate after layout rendered
-    requestAnimationFrame(() => {
-      this.calculateContainerHeight();
+    let debounceT = 0;
+    this.resizeObserver = new ResizeObserver(() => {
+      clearTimeout(debounceT);
+      debounceT = setTimeout(() => {
+        this.calculateViewport();
+        this.requestUpdate();
+        requestAnimationFrame(() => {
+          this.calculateContainerHeight();
+        });
+      }, 300);
     });
+    this.resizeObserver.observe(this);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-
     this.mutationObserver.disconnect();
+    this.resizeObserver.disconnect();
   }
 
   scan(): boolean {
@@ -155,6 +160,7 @@ export class Grid extends LitElement {
   }
 
   private calculateContainerHeight() {
+    console.log('height calculated');
     const maxHeight = this.layout.maxHeight;
     this.container.style.height = ((maxHeight * this.unitDimension.h) + ((maxHeight - 1) * this.gutter)) + 'px';
   }
