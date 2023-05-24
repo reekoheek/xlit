@@ -28,6 +28,9 @@ importers:
       eslint-config-xinix:
         specifier: ^2.0.1
         version: 2.0.1(eslint-plugin-n@15.7.0)(eslint@8.41.0)(typescript@5.0.4)
+      lit:
+        specifier: ^2.7.4
+        version: 2.7.4
       mocha:
         specifier: ^10.2.0
         version: 10.2.0
@@ -55,6 +58,12 @@ importers:
       lit:
         specifier: ^2.7.4
         version: 2.7.4
+      testutil:
+        specifier: workspace:*
+        version: link:../testutil
+
+  packages/grid:
+    devDependencies:
       testutil:
         specifier: workspace:*
         version: link:../testutil
