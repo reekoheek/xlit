@@ -34,11 +34,7 @@ export class Layout {
     return this.items.filter((item) => item.collide(it));
   }
 
-  move(item: Item) {
-    const existing = this.get(item.key);
-
-    this.assertItemOutOfBound(item);
-
+  shiftOthersOnCollision(item: Item) {
     const collisions = this.getCollisions(item);
     if (collisions.length) {
       collisions.forEach(shiftedItem => {
@@ -47,9 +43,26 @@ export class Layout {
         this.move(clone);
       });
     }
+  }
+
+  move(item: Item) {
+    const existing = this.get(item.key);
+
+    this.assertItemOutOfBound(item);
+    this.shiftOthersOnCollision(item);
 
     existing.x = item.x;
     existing.y = item.y;
+  }
+
+  resize(item: Item) {
+    const existing = this.get(item.key);
+
+    this.assertItemOutOfBound(item);
+    this.shiftOthersOnCollision(item);
+
+    existing.w = item.w;
+    existing.h = item.h;
   }
 
   getMaxHeightAbove(inspected: Item): number {

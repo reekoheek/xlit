@@ -16,6 +16,7 @@ interface ItemElement extends Element {
 }
 
 interface DragState {
+  kind: 'move' | 'resize';
   item: Item;
   offset: Point;
   pointer: Point;
@@ -29,13 +30,40 @@ export class Grid extends LitElement {
         box-sizing: border-box;
       }
 
+
       .container {
         position: relative;
+      }
+
+      :host(.grid-move) .container {
+        cursor: move;
+      }
+
+      :host(.grid-resize) .container {
+        cursor: se-resize
       }
 
       .item {
         position: absolute;
         transition: transform 200ms ease;
+        cursor: move;
+      }
+
+      .item-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .item-resizer {
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        border-bottom: 2px solid grey;
+        border-right: 2px solid grey;
+        cursor: se-resize;
       }
 
       .shadow-item {
@@ -184,7 +212,14 @@ export class Grid extends LitElement {
   }
 
   private renderItem(item: Item) {
-    return html`<div class="item" style="${this._calculateItemStyle(item)}"><slot name="${item.key}"></slot></div>`;
+    return html`
+      <div class="item" style="${this._calculateItemStyle(item)}">
+        <div class="item-container">
+          <slot name="${item.key}"></slot>
+          <div class="item-resizer" draggable="true" .item="${item}"></div>
+        </div>
+      </div>
+    `;
   }
 
   private renderShadowItem() {
@@ -226,7 +261,11 @@ export class Grid extends LitElement {
       evt.dataTransfer.setDragImage(img, 0, 0);
     }
 
-    const item = this.layout.get(draggable.item.key);
+    const kind = draggable.matches('.item-resizer') ? 'resize' : 'move';
+
+    this.classList.add(kind === 'resize' ? 'grid-resize' : 'grid-move');
+
+    const item = draggable.item;
 
     const unit = this.unitGutterDimension;
     const elX = item.x * unit.w;
@@ -239,7 +278,7 @@ export class Grid extends LitElement {
       y: pointer.y - elY,
     };
 
-    this.dragState = { item, offset, pointer };
+    this.dragState = { kind, item, offset, pointer };
 
     requestAnimationFrame(() => {
       this.requestUpdate();
@@ -260,16 +299,38 @@ export class Grid extends LitElement {
 
     this.dragState.pointer = pointer;
 
+    if (this.dragState.kind === 'move') {
+      const coord = this.pxToUnit({
+        x: pointer.x - this.dragState.offset.x,
+        y: pointer.y - this.dragState.offset.y,
+      });
+
+      try {
+        const item = this.dragState.item.clone();
+        item.x = coord.x;
+        item.y = coord.y;
+        this.layout.move(item);
+        this.layout.pack();
+        this.requestUpdate();
+        requestAnimationFrame(() => {
+          this.calculateContainerHeight();
+        });
+      } catch (err) {
+        // noop
+      }
+      return;
+    }
+
     const coord = this.pxToUnit({
-      x: pointer.x - this.dragState.offset.x,
-      y: pointer.y - this.dragState.offset.y,
+      x: pointer.x,
+      y: pointer.y,
     });
 
     try {
       const item = this.dragState.item.clone();
-      item.x = coord.x;
-      item.y = coord.y;
-      this.layout.move(item);
+      item.w = (coord.x >= 1 ? coord.x : 1) - item.x;
+      item.h = coord.y - item.y;
+      this.layout.resize(item);
       this.layout.pack();
       this.requestUpdate();
       requestAnimationFrame(() => {
@@ -282,12 +343,7 @@ export class Grid extends LitElement {
 
   private pxToUnit(point: Point): Point {
     const unit = this.unitGutterDimension;
-    let x = Math.round(point.x / unit.w);
-    if (x < 0) {
-      x = 0;
-    } else if (x >= this.cols) {
-      x = this.cols - 1;
-    }
+    const x = Math.round(point.x / unit.w);
     const y = Math.round(point.y / unit.h);
     return { x, y };
   }
@@ -299,6 +355,7 @@ export class Grid extends LitElement {
     }
 
     this.dragState = undefined;
+    this.classList.remove('grid-resize', 'grid-move');
 
     requestAnimationFrame(() => {
       this.requestUpdate();
