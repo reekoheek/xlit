@@ -33,6 +33,7 @@ export class Grid extends LitElement {
 
       .container {
         position: relative;
+        background-color: #eee;
       }
 
       :host(.grid-move) .container {
@@ -47,6 +48,11 @@ export class Grid extends LitElement {
         position: absolute;
         transition: transform 200ms ease;
         cursor: move;
+      }
+
+      .item.dragged {
+        transition: none;
+        z-index: 999;
       }
 
       .item-container {
@@ -68,7 +74,7 @@ export class Grid extends LitElement {
 
       .shadow-item {
         position: absolute;
-        background-color: grey;
+        background-color: red;
         opacity: 0.5;
         transition: transform 200ms ease;
       }
@@ -90,12 +96,17 @@ export class Grid extends LitElement {
   @state()
   layout = new Layout(this.cols);
 
+  @state()
+  private containerOffset!: Point;
+
+  @state()
+  private unitDimension!: Dimension;
+
   private mutationObserver!: MutationObserver;
   private resizeObserver!: ResizeObserver;
   // do not make it state coz will be problem in chrome when updating dragstate immediate thanks to chrome bug
   private dragState?: DragState;
   private nextKey = 0;
-  private unitDimension!: Dimension;
 
   get unitGutterDimension(): Dimension {
     return {
@@ -104,12 +115,13 @@ export class Grid extends LitElement {
     };
   }
 
-  connectedCallback() {
+  async connectedCallback() {
     super.connectedCallback();
 
-    this.calculateViewport();
+    // wait for first render
+    await new Promise(resolve => requestAnimationFrame(resolve));
 
-    this.layout = new Layout(this.cols);
+    this.calculateViewport();
     this.scan();
 
     // kick mutation observer after scan manually for the first time
@@ -120,16 +132,8 @@ export class Grid extends LitElement {
     });
     this.mutationObserver.observe(this, { childList: true });
 
-    let debounceT = 0;
     this.resizeObserver = new ResizeObserver(() => {
-      clearTimeout(debounceT);
-      debounceT = setTimeout(() => {
-        this.calculateViewport();
-        this.requestUpdate();
-        requestAnimationFrame(() => {
-          this.calculateContainerHeight();
-        });
-      }, 300);
+      this.calculateViewport();
     });
     this.resizeObserver.observe(this);
   }
@@ -191,14 +195,11 @@ export class Grid extends LitElement {
     return { x, y, w, h };
   }
 
-  private calculateContainerHeight() {
-    const maxHeight = this.layout.maxHeight;
-    this.container.style.height = ((maxHeight * this.unitDimension.h) + ((maxHeight - 1) * this.gutter)) + 'px';
-  }
-
   protected render() {
+    const styles = this._calculateContainerStyle();
     return html`
       <div class="container"
+        style="${styles}"
         @dragstart="${this.handleDragStarted}"
         @touchstart="${this.handleDragStarted}"
         @dragover="${this.handleDragged}"
@@ -212,8 +213,16 @@ export class Grid extends LitElement {
   }
 
   private renderItem(item: Item) {
+    let styles = this._calculateItemStyle(item);
+    if (this.dragState && this.dragState.item.key === item.key) {
+      if (this.dragState.kind === 'move') {
+        styles = this._calculatedMoveItemStyle(item);
+      } else {
+        styles = this._calculatedResizeItemStyle(item);
+      }
+    }
     return html`
-      <div class="item" style="${this._calculateItemStyle(item)}">
+      <div class="item ${this.dragState ? 'dragged' : ''}" style="${styles}">
         <div class="item-container">
           <slot name="${item.key}"></slot>
           <div class="item-resizer" draggable="true" .item="${item}"></div>
@@ -228,11 +237,46 @@ export class Grid extends LitElement {
     }
   }
 
-  private calculateViewport() {
-    const width = this.clientWidth;
-    const w = ((width - (this.gutter * (this.cols - 1))) / this.cols);
-    const h = (w * this.hfactor);
-    this.unitDimension = { w, h };
+  private _calculateContainerStyle() {
+    if (!this.container) {
+      return styleMap({});
+    }
+
+    return styleMap({
+      height: ((this.layout.maxHeight * this.unitGutterDimension.h) - this.gutter) + 'px',
+    });
+  }
+
+  private _calculatedMoveItemStyle(item: Item) {
+    if (!this.dragState) {
+      return styleMap({});
+    }
+    const unit = this.unitGutterDimension;
+    const left = this.dragState.pointer.x - this.dragState.offset.x;
+    const top = this.dragState.pointer.y - this.dragState.offset.y;
+    const width = (item.w * unit.w) - this.gutter;
+    const height = (item.h * unit.h) - this.gutter;
+    return styleMap({
+      width: width + 'px',
+      height: height + 'px',
+      transform: `translate(${left}px, ${top}px)`,
+    });
+  }
+
+  private _calculatedResizeItemStyle(item: Item) {
+    if (!this.dragState) {
+      return styleMap({});
+    }
+    const unit = this.unitGutterDimension;
+    const left = item.x * unit.w;
+    const top = item.y * unit.h;
+    const width = this.dragState.pointer.x - this.containerOffset.x - left + 15;
+    const height = this.dragState.pointer.y - this.containerOffset.y - top + 15;
+    return styleMap({
+      width: width + 'px',
+      height: height + 'px',
+      transform: `translate(${left}px, ${top}px)`,
+    });
   }
 
   private _calculateItemStyle(item: Item) {
@@ -248,7 +292,15 @@ export class Grid extends LitElement {
     });
   }
 
-  private handleDragStarted(evt: DragEvent | TouchEvent) {
+  private calculateViewport() {
+    const { x, y, width } = this.container.getBoundingClientRect();
+    const w = ((width - (this.gutter * (this.cols - 1))) / this.cols);
+    const h = (w * this.hfactor);
+    this.unitDimension = { w, h };
+    this.containerOffset = { x, y };
+  }
+
+  private async handleDragStarted(evt: DragEvent | TouchEvent) {
     const draggable = evt.composedPath()[0] as ItemElement;
     if (!draggable?.item) {
       return;
@@ -280,12 +332,11 @@ export class Grid extends LitElement {
 
     this.dragState = { kind, item, offset, pointer };
 
-    requestAnimationFrame(() => {
-      this.requestUpdate();
-    });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    this.requestUpdate();
   }
 
-  private handleDragged(evt: DragEvent | TouchEvent) {
+  private async handleDragged(evt: DragEvent | TouchEvent) {
     evt.preventDefault();
 
     if (!this.dragState) {
@@ -299,6 +350,9 @@ export class Grid extends LitElement {
 
     this.dragState.pointer = pointer;
 
+    this.requestUpdate();
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
     if (this.dragState.kind === 'move') {
       const coord = this.pxToUnit({
         x: pointer.x - this.dragState.offset.x,
@@ -311,44 +365,31 @@ export class Grid extends LitElement {
         item.y = coord.y;
         this.layout.move(item);
         this.layout.pack();
-        this.requestUpdate();
-        requestAnimationFrame(() => {
-          this.calculateContainerHeight();
-        });
       } catch (err) {
         // noop
       }
-      return;
-    }
-
-    const coord = this.pxToUnit({
-      x: pointer.x,
-      y: pointer.y,
-    });
-
-    try {
-      const item = this.dragState.item.clone();
-      item.w = (coord.x >= 1 ? coord.x : 1) - item.x;
-      item.h = coord.y - item.y;
-      this.layout.resize(item);
-      this.layout.pack();
-      this.requestUpdate();
-      requestAnimationFrame(() => {
-        this.calculateContainerHeight();
+    } else {
+      const coord = this.pxToUnit({
+        x: pointer.x - this.containerOffset.x,
+        y: pointer.y - this.containerOffset.y,
       });
-    } catch (err) {
-      // noop
+
+      try {
+        const item = this.dragState.item.clone();
+        item.w = (coord.x >= 1 ? coord.x : 1) - item.x;
+        item.h = coord.y - item.y;
+        this.layout.resize(item);
+        this.layout.pack();
+      } catch (err) {
+        // noop
+      }
     }
+
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    this.requestUpdate();
   }
 
-  private pxToUnit(point: Point): Point {
-    const unit = this.unitGutterDimension;
-    const x = Math.round(point.x / unit.w);
-    const y = Math.round(point.y / unit.h);
-    return { x, y };
-  }
-
-  private handleDropped(evt: DragEvent) {
+  private async handleDropped(evt: DragEvent) {
     evt.preventDefault();
     if (!this.dragState) {
       return;
@@ -357,9 +398,15 @@ export class Grid extends LitElement {
     this.dragState = undefined;
     this.classList.remove('grid-resize', 'grid-move');
 
-    requestAnimationFrame(() => {
-      this.requestUpdate();
-    });
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    this.requestUpdate();
+  }
+
+  private pxToUnit(point: Point): Point {
+    const unit = this.unitGutterDimension;
+    const x = Math.round(point.x / unit.w);
+    const y = Math.round(point.y / unit.h);
+    return { x, y };
   }
 }
 

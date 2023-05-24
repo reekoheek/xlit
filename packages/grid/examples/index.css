@@ -13,7 +13,7 @@ x-app {
 }
 
 nav {
-  padding: 5px;
+  padding: 10px;
   border-bottom: 1px solid grey;
 }
 
@@ -36,6 +36,7 @@ xlit-grid {
   background-color: blue;
   height: 100%;
   display: flex;
+  border: 1px solid grey;
 }
 
 .card .text {
