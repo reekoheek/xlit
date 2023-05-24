@@ -19,7 +19,6 @@ export class Layout {
     this.assertDuplicateItem(item);
     this.assertCollisionFound(item);
 
-
     this.items.push(item);
   }
 
@@ -39,10 +38,56 @@ export class Layout {
     const existing = this.get(item.key);
 
     this.assertItemOutOfBound(item);
-    this.assertCollisionFound(item);
+
+    const collisions = this.getCollisions(item);
+    if (collisions.length) {
+      collisions.forEach(shiftedItem => {
+        const clone = shiftedItem.clone();
+        clone.y = item.y + item.h;
+        this.move(clone);
+      });
+    }
 
     existing.x = item.x;
     existing.y = item.y;
+  }
+
+  getMaxHeightAbove(inspected: Item): number {
+    return this.items.reduce((result, item) => {
+      if (item.y >= inspected.y) {
+        return result;
+      }
+
+      if (item.x + item.w <= inspected.x) {
+        return result;
+      }
+
+      if (item.x >= inspected.x + inspected.w) {
+        return result;
+      }
+
+      const h = item.y + item.h;
+      return result > h ? result : h;
+    }, 0);
+  }
+
+  pack() {
+    const items = this.sortedItems();
+    items.forEach((item) => {
+      item.y = this.getMaxHeightAbove(item);
+    });
+  }
+
+  private sortedItems() {
+    return this.items.slice(0).sort((a, b) => {
+      if (a.y > b.y || (a.y === b.y && a.x > b.x)) {
+        return 1;
+      } else if (a.y === b.y && a.x === b.x) {
+        // Without this, we can get different sort results in IE vs. Chrome/FF
+        return 0;
+      }
+      return -1;
+    });
   }
 
   assertItemOutOfBound(item: Item) {

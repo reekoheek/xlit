@@ -86,7 +86,7 @@ export class Grid extends LitElement {
 
     // kick mutation observer after scan manually for the first time
     this.mutationObserver = new MutationObserver(() => {
-      if (this.scan()) {
+      if (this.scan().length) {
         this.requestUpdate();
       }
     });
@@ -112,7 +112,7 @@ export class Grid extends LitElement {
     this.resizeObserver.disconnect();
   }
 
-  scan(): boolean {
+  scan(): ItemElement[] {
     const elements = ([...this.children] as ItemElement[]).filter((el) => {
       if (el.item) {
         return false;
@@ -143,7 +143,11 @@ export class Grid extends LitElement {
       throw new GridError(`try positioning item with no luck after ${retryCount} tries`);
     });
 
-    return Boolean(elements.length);
+    if (elements.length) {
+      this.layout.pack();
+    }
+
+    return elements;
   }
 
   private readRectFromItemElement(el: ItemElement): Rect {
@@ -266,6 +270,7 @@ export class Grid extends LitElement {
       item.x = coord.x;
       item.y = coord.y;
       this.layout.move(item);
+      this.layout.pack();
       this.requestUpdate();
       requestAnimationFrame(() => {
         this.calculateContainerHeight();

@@ -52,4 +52,55 @@ describe('Layout', () => {
       assert.throws(() => layout.get('baz'), /item not found/);
     });
   });
+
+  describe('#move()', () => {
+    it('move item', () => {
+      const foo = new Item('foo');
+      const layout = new Layout(3);
+      layout.add(foo);
+
+      const clone = foo.clone();
+      clone.x = 2;
+      clone.y = 3;
+      layout.move(clone);
+
+      assert.strictEqual(layout.get('foo').x, 2);
+      assert.strictEqual(layout.get('foo').y, 3);
+    });
+
+    it('shift collision item to next y', () => {
+      const foo = new Item('foo');
+      const bar = new Item('bar', { x: 1 });
+
+      const layout = new Layout(3);
+      layout.add(foo);
+      layout.add(bar);
+
+      const clone = foo.clone();
+      clone.x = 1;
+      layout.move(clone);
+
+      assert.strictEqual(bar.x, 1);
+      assert.strictEqual(bar.y, 1);
+    });
+  });
+
+  describe('#pack()', () => {
+    it('pack to top', () => {
+      const foo = new Item('foo', { x: 0, y: 1 });
+      const bar = new Item('bar', { x: 1, y: 2 });
+      const baz = new Item('baz', { x: 2, y: 3 });
+
+      const layout = new Layout(3);
+      layout.add(foo);
+      layout.add(bar);
+      layout.add(baz);
+
+      layout.pack();
+
+      assert.strictEqual(foo.y, 0);
+      assert.strictEqual(bar.y, 0);
+      assert.strictEqual(baz.y, 0);
+    });
+  });
 });
