@@ -1,15 +1,17 @@
+import { Router } from './Router.js';
 import { RouterError } from './RouterError.js';
 
 export class Context {
   readonly path: string;
   readonly query: Record<string, string> = {};
   readonly params: Record<string, string> = {};
-  private readonly state: Record<string, unknown> = {};
+  result?: Element;
 
-  constructor(path: string) {
+  private state: Record<string, unknown> = {};
+
+  constructor(readonly router: Router, path: string) {
     const url = new URL(path, 'http://localhost');
     url.searchParams.forEach((v, k) => (this.query[k] = v));
-
     this.path = url.pathname;
   }
 

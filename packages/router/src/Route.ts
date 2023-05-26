@@ -1,5 +1,4 @@
 import { Context } from './Context.js';
-import { ContextedElement, toContextedElement } from './ContextedElement.js';
 import { RouterError } from './RouterError.js';
 
 export type RouteFn = (ctx: Context) => Promise<Element>;
@@ -9,7 +8,7 @@ export class Route {
   private args: string[] = [];
 
   constructor(private path: string, private fn: RouteFn) {
-    if (!path.match(/[[{]/)) {
+    if (!/[[{]/.exec(path)) {
       return;
     }
 
@@ -39,18 +38,17 @@ export class Route {
 
   test(ctx: Context): boolean {
     if (this.pattern) {
-      return Boolean(ctx.path.match(this.pattern));
+      return Boolean(this.pattern.exec(ctx.path));
     }
     return this.path === '*' || this.path === ctx.path;
   }
 
-  async invoke(ctx: Context): Promise<ContextedElement> {
+  async invoke(ctx: Context): Promise<Element> {
     if (this.pattern) {
-      const matched = ctx.path.match(this.pattern) as RegExpMatchArray;
+      const matched = this.pattern.exec(ctx.path) as RegExpMatchArray;
       this.args.forEach((arg, i) => (ctx.params[arg] = matched[i + 1]));
     }
 
-    const el = await this.fn(ctx);
-    return toContextedElement(el, ctx);
+    return await this.fn(ctx);
   }
 }

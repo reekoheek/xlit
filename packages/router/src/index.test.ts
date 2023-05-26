@@ -157,7 +157,7 @@ describe('Router', () => {
     it('not route if same context', async() => {
       const outlet = new MockOutlet();
       const router = new Router(outlet, mockOptions());
-      router['ctx'] = new Context('/foo');
+      router['ctx'] = new Context(router, '/foo');
       await router.push('/foo');
       assert.strictEqual(outlet.element, undefined);
     });
@@ -166,7 +166,7 @@ describe('Router', () => {
       const outlet = new MockOutlet();
       const router = new Router(outlet, mockOptions());
       router.route('/foo', createRouteFn('foo'));
-      router['ctx'] = new Context('/foo?bar=baz');
+      router['ctx'] = new Context(router, '/foo?bar=baz');
       await router.push('/foo?bar=baz');
       assert.strictEqual(outlet.element, undefined);
 

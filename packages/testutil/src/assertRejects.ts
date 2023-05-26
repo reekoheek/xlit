@@ -43,5 +43,5 @@ function isExpectedMessage(e: unknown, expected: Expected) {
 }
 
 function isExpectedMatched(e: unknown, expected: Expected) {
-  return expected instanceof RegExp && e instanceof Error && e.message.match(expected);
+  return expected instanceof RegExp && e instanceof Error && expected.exec(e.message);
 }

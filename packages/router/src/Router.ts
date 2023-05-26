@@ -1,8 +1,10 @@
 import { Context } from './Context.js';
+import { toContextedElement } from './ContextedElement.js';
 import { HistoryMode } from './HistoryMode.js';
 import { DefaultOutlet, Outlet, isOutlet } from './Outlet.js';
 import { Route, RouteFn } from './Route.js';
 import { RouterError } from './RouterError.js';
+import { Todo, todo } from './Todo.js';
 import { EventTargetInterface, HistoryInterface, LocationInterface, ModeInterface } from './types.js';
 
 type Next = () => Promise<void>
@@ -29,10 +31,11 @@ export class Router {
   private location: LocationInterface;
 
   private ctx?: Context;
+  private _dispatching?: Todo<void>;
 
   private popstateListener: EventListener = async() => {
     const path = this.mode.getContextPath(this.location);
-    await this.dispatch(new Context(path));
+    await this.dispatch(new Context(this, path));
   };
 
   private clickListener: EventListener = async(evt) => {
@@ -43,7 +46,7 @@ export class Router {
     evt.preventDefault();
     evt.stopImmediatePropagation();
     const path = this.mode.getContextPath(target);
-    const ctx = new Context(path);
+    const ctx = new Context(this, path);
     this.history.pushState(undefined, '', target.href);
     await this.dispatch(ctx);
   };
@@ -59,7 +62,7 @@ export class Router {
   start(): Promise<void> {
     this.eventTarget.addEventListener('popstate', this.popstateListener);
     this.eventTarget.addEventListener('click', this.clickListener);
-    const ctx = new Context(this.mode.getContextPath(this.location));
+    const ctx = new Context(this, this.mode.getContextPath(this.location));
     return this.dispatch(ctx);
   }
 
@@ -83,30 +86,36 @@ export class Router {
       return;
     }
 
-    await invokeMiddlewareChain(this.middlewares, ctx, async() => {
-      const route = this.routes.find(r => r.test(ctx));
-      if (!route) {
-        throw new RouterError('route not found');
-      }
+    await this._dispatching;
+    this._dispatching = todo();
 
-      this.ctx = ctx;
+    this.ctx = ctx;
 
-      const rendered = await route.invoke(ctx);
-      if (rendered) {
-        ctx.set('rendered', rendered);
-        await this.outlet.render(rendered);
+    try {
+      await invokeMiddlewareChain(this.middlewares, ctx, async() => {
+        const route = this.routes.find(r => r.test(ctx));
+        if (!route) {
+          throw new RouterError('route not found');
+        }
+        ctx.result = await route.invoke(ctx);
+      });
+
+      if (ctx.result) {
+        await this.outlet.render(toContextedElement(ctx.result, ctx));
       }
-    });
+    } finally {
+      this._dispatching.resolve();
+    }
   }
 
   push(path: string): Promise<void> {
-    const ctx = new Context(path);
+    const ctx = new Context(this, path);
     this.history.pushState('', '', this.mode.getHistoryUrl(path));
     return this.dispatch(ctx);
   }
 
   replace(path: string): Promise<void> {
-    const ctx = new Context(path);
+    const ctx = new Context(this, path);
     this.history.replaceState('', '', this.mode.getHistoryUrl(path));
     return this.dispatch(ctx);
   }
