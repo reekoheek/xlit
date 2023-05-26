@@ -14,8 +14,8 @@
     "prepublish": "pnpm clean; pnpm build",
     "clean": "rm -rf coverage index.js *.d.ts *.map",
     "lint": "wireit",
-    "lint:eslint": "eslint ./src",
-    "lint:ts": "tsc --noEmit",
+    "lint:eslint": "wireit",
+    "lint:ts": "wireit",
     "build": "wireit",
     "build:js": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./",
     "build:types": "tsc --emitDeclarationOnly",
@@ -30,9 +30,23 @@
         "lint:ts"
       ]
     },
+    "lint:eslint": {
+      "command": "eslint ./src",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
+    "lint:ts": {
+      "command": "tsc --noEmit",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
     "build": {
       "dependencies": [
-        "lint",
+        "lint:eslint",
         "build:js",
         "build:types"
       ]
