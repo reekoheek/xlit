@@ -7,7 +7,7 @@ import { EventTargetInterface, HistoryInterface, LocationInterface, ModeInterfac
 
 type Next = () => Promise<void>
 
-type Middleware =(ctx: Context, next: Next) => Promise<void>;
+export type Middleware = (ctx: Context, next: Next) => Promise<void>;
 
 type OutletArg = Outlet | Element;
 
@@ -30,12 +30,12 @@ export class Router {
 
   private ctx?: Context;
 
-  private popstateListener: EventListener = () => {
+  private popstateListener: EventListener = async() => {
     const path = this.mode.getContextPath(this.location);
-    this.dispatch(new Context(path));
+    await this.dispatch(new Context(path));
   };
 
-  private clickListener: EventListener = (evt) => {
+  private clickListener: EventListener = async(evt) => {
     const target = (evt.composedPath()[0] as Element).closest('a');
     if (!target) {
       return;
@@ -45,7 +45,7 @@ export class Router {
     const path = this.mode.getContextPath(target);
     const ctx = new Context(path);
     this.history.pushState(undefined, '', target.href);
-    this.dispatch(ctx);
+    await this.dispatch(ctx);
   };
 
   constructor(outlet: OutletArg, opts?: RouterOptions) {
@@ -68,18 +68,18 @@ export class Router {
     this.eventTarget.removeEventListener('click', this.clickListener);
   }
 
-  use(middleware: Middleware): Router {
+  use(middleware: Middleware): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  route(path: string, fn: RouteFn): Router {
+  route(path: string, fn: RouteFn): this {
     this.routes.push(new Route(path, fn));
     return this;
   }
 
   private async dispatch(ctx: Context): Promise<void> {
-    if (this.ctx && this.ctx.equals(ctx)) {
+    if (this.ctx?.equals(ctx)) {
       return;
     }
 
@@ -91,9 +91,10 @@ export class Router {
 
       this.ctx = ctx;
 
-      const result = await route.invoke(ctx);
-      if (result) {
-        await this.outlet.render(result);
+      const rendered = await route.invoke(ctx);
+      if (rendered) {
+        ctx.set('rendered', rendered);
+        await this.outlet.render(rendered);
       }
     });
   }
