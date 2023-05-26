@@ -1,6 +1,6 @@
 {
   "name": "@xlit/router",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "xlit router custom element",
   "type": "module",
   "main": "index.js",
