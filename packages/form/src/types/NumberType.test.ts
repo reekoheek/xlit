@@ -1,4 +1,4 @@
-import { NumberType } from './NumberType';
+import { NumberType } from './NumberType.js';
 import { assert } from '@open-wc/testing';
 import { assertRejects } from 'testutil';
 

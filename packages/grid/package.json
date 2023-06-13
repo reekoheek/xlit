@@ -1,6 +1,6 @@
 {
   "name": "@xlit/grid",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./index.js",
@@ -11,17 +11,16 @@
     "/*.{d.ts,d.ts.map}"
   ],
   "scripts": {
-    "prepublish": "pnpm clean; pnpm build",
-    "clean": "rm -rf coverage types index.js *.d.ts *.map",
+    "prepublish": "pnpm clean; pnpm lint && pnpm build",
+    "clean": "rm -rf coverage index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
     "build": "wireit",
-    "build:js": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./",
-    "build:types": "tsc --emitDeclarationOnly",
-    "test": "wtr",
-    "test:watch": "wtr --watch",
-    "examples": "vite ./examples"
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "wireit",
+    "test:watch": "wtr --watch"
   },
   "wireit": {
     "lint": {
@@ -46,10 +45,34 @@
     },
     "build": {
       "dependencies": [
-        "lint:eslint",
         "build:js",
         "build:types"
       ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./index.js{,.map}"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "wtr",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
     }
   },
   "repository": {

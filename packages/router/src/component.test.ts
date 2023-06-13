@@ -1,5 +1,5 @@
 import { assert } from '@open-wc/testing';
-import { component } from './component';
+import { component } from './component.js';
 
 describe('component()', () => {
   it('return element if invoked', async() => {

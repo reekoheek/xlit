@@ -1,5 +1,5 @@
 import { assert } from '@open-wc/testing';
-import { HashMode } from './HashMode';
+import { HashMode } from './HashMode.js';
 
 describe('HashMode', () => {
   describe('#getContextPath()', () => {

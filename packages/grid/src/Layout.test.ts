@@ -1,5 +1,5 @@
-import { Item } from './Item';
-import { Layout } from './Layout';
+import { Item } from './Item.js';
+import { Layout } from './Layout.js';
 import { assert } from '@open-wc/testing';
 
 describe('Layout', () => {

@@ -4,11 +4,11 @@ import { DIError } from './DIError.js';
 import { injected } from './injected.js';
 import { singleton } from './singleton.js';
 
-export interface Injectable {
-  [key: string]: unknown;
+export interface Injectable<T> {
+  [key: string]: NonNullable<unknown>;
   // eslint-disable-next-line no-use-before-define
-  __diMetadata?: Metadata;
-  __diInjected?: Promise<void>;
+  __diMetadata: Metadata;
+  __diInjected: Promise<T>;
 }
 
 interface LookupEntry {
@@ -80,8 +80,8 @@ export class Metadata {
       throw new DIError('provide must be immediately injected');
     }
 
-    const injectThis = (obj: object) => {
-      const injectable = obj as Injectable;
+    const injectThis = <T>(obj: T) => {
+      const injectable = obj as Injectable<T>;
       injectable.__diInjected = (async() => {
         for (const entry of this.provideEntries) {
           container.provide(entry.to, () => injectable[entry.from]);
@@ -90,6 +90,8 @@ export class Metadata {
         await Promise.all(this.flattenLookupEntries().map(async(entry) => {
           injectable[entry.to] = await container.lookup(entry.from);
         }));
+
+        return obj;
       })();
     };
 
@@ -115,8 +117,8 @@ export class Metadata {
   }
 }
 
-export function metadataOf(obj: object): Metadata {
-  const injectable = obj as Injectable;
+export function metadataOf<T>(obj: T): Metadata {
+  const injectable = obj as Injectable<T>;
   let metadata = injectable.__diMetadata;
   if (hasOwnMetadata(injectable) && metadata) {
     return metadata;
@@ -130,6 +132,6 @@ export function hasMetadata(obj: object): boolean {
   return '__diMetadata' in obj;
 }
 
-function hasOwnMetadata(injectable: Injectable) {
+function hasOwnMetadata<T>(injectable: Injectable<T>) {
   return Object.prototype.hasOwnProperty.call(injectable, '__diMetadata');
 }

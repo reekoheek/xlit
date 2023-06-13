@@ -1,6 +1,6 @@
 import { assert } from '@open-wc/testing';
-import { instance } from './instance';
-import { Container } from './Container';
+import { instance } from './instance.js';
+import { Container } from './Container.js';
 
 describe('instance()', () => {
   it('generate provider to instance', async() => {

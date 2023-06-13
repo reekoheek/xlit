@@ -17,12 +17,10 @@ Implement container
 
 import { Container, instance, singleton } from '@xlit/di';
 
-const container = new Container({
-    foo: () => 'foo',
-    bar: instance('bar'),
-    baz: singleton(() => 'baz'),
-  })
-  .provide('other', instance('other instance'));
+const container = new Container()
+  .provide('foo', () => 'foo')
+  .provide('bar', instance('bar'))
+  .provide('baz', singleton(() => 'baz'));
 
 const foo = await container.lookup('foo');
 ```

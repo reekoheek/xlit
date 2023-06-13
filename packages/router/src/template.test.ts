@@ -1,5 +1,5 @@
 import { assert, fixture, html } from '@open-wc/testing';
-import { template } from './template';
+import { template } from './template.js';
 import { assertRejects } from 'testutil';
 
 describe('template()', () => {

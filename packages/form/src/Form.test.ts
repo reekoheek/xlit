@@ -1,5 +1,5 @@
-import { Form } from './Form';
-import { StringType } from './types/StringType';
+import { Form } from './Form.js';
+import { StringType } from './types/StringType.js';
 import { assert, fixture, html } from '@open-wc/testing';
 import { assertRejects } from 'testutil';
 

@@ -1,13 +1,10 @@
-import { DIError } from './DIError.js';
 import { metadataOf } from './Metadata.js';
 
 export function lookup(name?: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (target: any, ctx: unknown) => {
-    if (typeof ctx !== 'string') throw new DIError('unimplemented new decorator spec');
-
-    const from = name ?? ctx;
-    const to = ctx;
+  return (target: any, propName: string) => {
+    const from = name ?? propName;
+    const to = propName;
     metadataOf(target).addLookupEntry({ from, to });
   };
 }

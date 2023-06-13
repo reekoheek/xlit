@@ -1,4 +1,4 @@
-import { ObjectType } from './ObjectType';
+import { ObjectType } from './ObjectType.js';
 import { assert } from '@open-wc/testing';
 
 describe('ObjectType', () => {

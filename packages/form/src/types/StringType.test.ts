@@ -1,4 +1,4 @@
-import { StringType } from './StringType';
+import { StringType } from './StringType.js';
 import { assert } from '@open-wc/testing';
 import { assertRejects } from 'testutil';
 

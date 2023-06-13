@@ -1,5 +1,5 @@
 import { assert } from '@open-wc/testing';
-import { injected } from './injected';
+import { injected } from './injected.js';
 
 describe('injected()', () => {
   it('return promise', () => {

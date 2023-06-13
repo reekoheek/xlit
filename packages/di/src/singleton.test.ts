@@ -1,6 +1,6 @@
 import { assert } from '@open-wc/testing';
-import { singleton } from './singleton';
-import { Container } from './Container';
+import { singleton } from './singleton.js';
+import { Container } from './Container.js';
 
 describe('singleton()', () => {
   it('generate singleton provider', () => {

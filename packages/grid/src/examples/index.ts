@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit';
-import '../src/index';
+import '../index.js';
 import './index.css';
 
 interface Item {

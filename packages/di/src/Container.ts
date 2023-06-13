@@ -1,20 +1,23 @@
 import { DIError } from './DIError.js';
 
 // eslint-disable-next-line no-use-before-define
-export type Provider = (c: Container) => Promise<unknown> | unknown;
-
-type ContainerArg = Record<string, Provider>
+export type Provider = (c: Container) => Promise<NonNullable<unknown>> | NonNullable<unknown>;
 
 export class Container {
-  private fns: Record<string, Provider> = {};
-
-  constructor(arg: ContainerArg = {}) {
-    for (const name in arg) {
-      this.provide(name, arg[name]);
+  static instance() {
+    if (!instance) {
+      instance = new Container();
     }
+    return instance;
   }
 
-  provide(name: string, fn: Provider) {
+  static reset() {
+    instance = undefined;
+  }
+
+  private fns: Record<string, Provider> = {};
+
+  provide(name: string, fn: Provider): this {
     this.fns[name] = fn;
     return this;
   }
@@ -27,3 +30,5 @@ export class Container {
     return fn(this) as Promise<T>;
   }
 }
+
+let instance: Container | undefined;

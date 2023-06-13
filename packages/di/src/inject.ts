@@ -3,10 +3,8 @@ import { Container } from './Container.js';
 import { DIError } from './DIError.js';
 import { metadataOf, hasMetadata } from './Metadata.js';
 
-export function inject(container: Container) {
-  return <Class extends Constructor>(Target: Class, ctx?: unknown) => {
-    if (typeof ctx === 'object') throw new DIError('unimplemented new decorator spec');
-
+export function inject(container: Container = Container.instance()) {
+  return <Class extends Constructor>(Target: Class) => {
     if (!hasMetadata(Target.prototype)) {
       throw new DIError('nothing to inject');
     }

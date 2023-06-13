@@ -1,5 +1,5 @@
 import { assert, fixture, html } from '@open-wc/testing';
-import { Context, HashMode, HistoryMode, Router } from './';
+import { Context, HashMode, HistoryMode, Router } from './index.js';
 import { assertRejects } from 'testutil';
 
 describe('Router', () => {

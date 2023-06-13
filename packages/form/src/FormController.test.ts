@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
-import { FormController } from './FormController';
-import { StringType } from './types/StringType';
+import { FormController } from './FormController.js';
+import { StringType } from './types/StringType.js';
 import { assert, fixture } from '@open-wc/testing';
 
 describe('FormController', () => {

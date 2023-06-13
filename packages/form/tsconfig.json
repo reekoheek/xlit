@@ -4,7 +4,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
     "module": "es2020",
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node16",
     "declaration": true,
     "sourceMap": true,
     "outDir": "./",
@@ -16,5 +16,5 @@
     "skipLibCheck": true
   },
   "include": ["./src/**/*.ts"],
-  "exclude": ["./**/*.test.ts"]
+  "exclude": []
 }

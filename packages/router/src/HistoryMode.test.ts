@@ -1,5 +1,5 @@
 import { assert } from '@open-wc/testing';
-import { HistoryMode } from './HistoryMode';
+import { HistoryMode } from './HistoryMode.js';
 
 describe('HistoryMode', () => {
   describe('#getContextPath()', () => {

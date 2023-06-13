@@ -13,7 +13,7 @@
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
     "build": "wireit",
-    "test": "nyc --reporter=html mocha --extension ts -r esbuild-register './src/**/*.test.ts'"
+    "test": "vitest run --coverage"
   },
   "wireit": {
     "lint": {

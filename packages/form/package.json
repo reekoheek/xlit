@@ -1,32 +1,10 @@
 {
   "name": "@xlit/form",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "xlit form custom element",
   "type": "module",
   "main": "./index.js",
   "types": "./index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
-    },
-    "./types/BooleanType.js": {
-      "types": "./types/BooleanType.d.ts",
-      "default": "./types/BooleanType.js"
-    },
-    "./types/NumberType.js": {
-      "types": "./types/NumberType.d.ts",
-      "default": "./types/NumberType.js"
-    },
-    "./types/ObjectType.js": {
-      "types": "./types/ObjectType.d.ts",
-      "default": "./types/ObjectType.js"
-    },
-    "./types/StringType.js": {
-      "types": "./types/StringType.d.ts",
-      "default": "./types/StringType.js"
-    }
-  },
   "sideEffects": false,
   "files": [
     "/index.{js,js.map}",
@@ -34,15 +12,15 @@
     "/types/"
   ],
   "scripts": {
-    "prepublish": "pnpm clean; pnpm build",
+    "prepublish": "pnpm clean; pnpm lint && pnpm build",
     "clean": "rm -rf coverage types index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
     "build": "wireit",
-    "build:js": "esbuild ./src/index.ts ./src/types/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
-    "build:types": "tsc --emitDeclarationOnly",
-    "test": "wtr",
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "wireit",
     "test:watch": "wtr --watch"
   },
   "wireit": {
@@ -68,10 +46,35 @@
     },
     "build": {
       "dependencies": [
-        "lint:eslint",
         "build:js",
         "build:types"
       ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts ./src/types/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./index.js{,.map}",
+        "./types/*.js{,.map"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "wtr",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
     }
   },
   "repository": {
@@ -93,7 +96,6 @@
     "access": "public"
   },
   "devDependencies": {
-    "lit": "^2.7.4",
     "testutil": "workspace:*"
   },
   "dependencies": {

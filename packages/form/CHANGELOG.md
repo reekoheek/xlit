@@ -1,5 +1,11 @@
 # @xlit/form
 
+## 2.4.0
+
+### Minor Changes
+
+- router can be short wire via middleware
+
 ## 2.3.1
 
 ### Patch Changes

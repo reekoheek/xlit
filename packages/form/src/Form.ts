@@ -72,8 +72,8 @@ export class Form<TModel = KeyValue> {
     }
   }
 
-  handleInput(key: keyof Types<TModel>): EventListener {
-    return async(evt) => {
+  handleInput(key: keyof Types<TModel>) {
+    return async(evt: Event) => {
       try {
         const value = (evt.target as HTMLInputElement).value;
         await this.set(key, value);
@@ -83,8 +83,8 @@ export class Form<TModel = KeyValue> {
     };
   }
 
-  handleSubmit(fn: SubmitHandler<TModel>): EventListener {
-    return async(evt) => {
+  handleSubmit(fn: SubmitHandler<TModel>) {
+    return async(evt: Event) => {
       try {
         evt.preventDefault();
         await this.assert();

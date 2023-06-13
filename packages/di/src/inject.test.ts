@@ -1,17 +1,16 @@
-import { Container } from './Container';
-import { instance } from './instance';
-import { injected } from './injected';
-import { inject } from './inject';
-import { lookup } from './lookup';
+import { Container } from './Container.js';
+import { instance } from './instance.js';
+import { injected } from './injected.js';
+import { inject } from './inject.js';
+import { lookup } from './lookup.js';
 import { assert } from '@open-wc/testing';
-import { provide } from './provide';
+import { provide } from './provide.js';
 
 describe('inject()', () => {
   it('inject lookups', async() => {
-    const container = new Container({
-      foo: instance('foo'),
-      bar: instance('bar'),
-    });
+    const container = new Container()
+      .provide('foo', instance('foo'))
+      .provide('bar', instance('bar'));
 
     @inject(container)
     class Component {
@@ -82,10 +81,9 @@ describe('inject()', () => {
   });
 
   it('lookup from inherited object', async() => {
-    const container = new Container({
-      foo: instance('foo'),
-      bar: instance('bar'),
-    });
+    const container = new Container()
+      .provide('foo', instance('foo'))
+      .provide('bar', instance('bar'));
 
     class Parent {
       @lookup()
