@@ -9,11 +9,11 @@
   "files": [
     "/index.{js,js.map}",
     "/*.{d.ts,d.ts.map}",
-    "/types/"
+    "/fields/"
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf coverage types index.js *.d.ts *.map",
+    "clean": "rm -rf coverage fields index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
@@ -51,13 +51,13 @@
       ]
     },
     "build:js": {
-      "command": "esbuild ./src/index.ts ./src/types/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
+      "command": "esbuild ./src/index.ts ./src/fields/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
       "files": [
         "./src/**/*.ts"
       ],
       "output": [
         "./index.js{,.map}",
-        "./types/*.js{,.map"
+        "./fields/*.js{,.map"
       ]
     },
     "build:types": {
@@ -99,6 +99,6 @@
     "testutil": "workspace:*"
   },
   "dependencies": {
-    "lit": "^2.7.4"
+    "lit": "^2.7.5"
   }
 }

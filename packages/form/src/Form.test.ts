@@ -1,39 +1,16 @@
 import { Form } from './Form.js';
-import { StringType } from './types/StringType.js';
+import { StringField } from './fields/StringField.js';
 import { assert, fixture, html } from '@open-wc/testing';
-import { assertRejects } from 'testutil';
 
 describe('Form', () => {
   describe('constructor', () => {
-    it('create new form', () => {
-      const form = new Form({
-        foo: new StringType().required(),
-      });
-
-      assert.deepStrictEqual(Object.keys(form['types']), ['foo']);
-    });
-
-    it('create form with custom model', () => {
-      interface Model {
-        foo?: string;
-        bar: string;
-      }
-
-      const form = new Form<Model>({
-        foo: new StringType().required(),
-        bar: new StringType(),
-      });
-
-      assert.deepStrictEqual(Object.keys(form['types']), ['foo', 'bar']);
-    });
-
     it('add update handler if specified', () => {
       function handler() {
         // noop
       }
       const form = new Form({
-        foo: new StringType(),
-      }, handler);
+        foo: new StringField(),
+      }).addUpdateHandler(handler);
       assert.strictEqual(form['updateHandlers'][0], handler);
     });
   });
@@ -61,47 +38,36 @@ describe('Form', () => {
     });
   });
 
-  describe('#set()', () => {
-    it('set field', async() => {
-      interface Model {
-        foo: string;
-      }
+  describe('#setState()', () => {
+    interface Model {
+      foo: string;
+    }
 
+    it('set state', async() => {
       const form = new Form<Model>({
-        foo: new StringType().required(),
+        foo: new StringField().required(),
       });
 
-      await form.set('foo', 'foo');
+      await form.setState({ foo: 'foo' });
       assert.deepStrictEqual(form.errors, {});
       assert.deepStrictEqual(form.state, { foo: 'foo' });
 
-      await form.set('foo', '');
+      await form.setState({ foo: '' });
       assert.deepStrictEqual(form.errors, { foo: 'must be required' });
       assert.deepStrictEqual(form.state, {});
     });
-  });
 
-  describe('#assert()', () => {
-    it('assert model', async() => {
-      const form = new Form({
-        foo: new StringType().required(),
-        bar: new StringType(),
+    it('notify update', async() => {
+      const form = new Form<Model>({
+        foo: new StringField().required(),
       });
 
-      form['_state'] = {
-        bar: 'bar',
-      };
+      const hits: string[] = [];
+      form.addUpdateHandler(() => hits.push('hit'));
 
-      await assertRejects(() => form.assert());
-      assert.deepStrictEqual(form.state, { bar: 'bar' });
-
-      form['_state'] = {
-        foo: 'foo',
-        bar: 'bar',
-      };
-
-      await form.assert();
-      assert.deepStrictEqual(form.state, { foo: 'foo', bar: 'bar' });
+      await form.setState({ foo: 'foo' });
+      await new Promise((resolve) => setTimeout(resolve, 301));
+      assert.deepStrictEqual(hits, ['hit']);
     });
   });
 
@@ -112,8 +78,8 @@ describe('Form', () => {
         hits.push('');
       }
       const form = new Form({
-        foo: new StringType().required(),
-      }, handler);
+        foo: new StringField().required(),
+      }).addUpdateHandler(handler);
       const listener = form.handleInput('foo');
       assert.strictEqual(typeof listener, 'function');
       assert.strictEqual(hits.length, 0);
@@ -122,7 +88,7 @@ describe('Form', () => {
         <input type="text" value="bar" @input="${listener}">
       `);
       root.dispatchEvent(new CustomEvent('input'));
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise(resolve => setTimeout(resolve, 301));
       assert.strictEqual(hits.length, 1);
     });
   });
@@ -134,26 +100,39 @@ describe('Form', () => {
         updates.push('');
       }
       const form = new Form({
-        foo: new StringType().required(),
-      }, handler);
+        foo: new StringField().required(),
+      }).addUpdateHandler(handler);
       const submits: unknown[] = [];
-      const listener = form.handleSubmit((model) => {
+      const submitListener = form.handleSubmit((model) => {
         submits.push(model);
       });
-      assert.strictEqual(typeof listener, 'function');
+      assert.strictEqual(typeof submitListener, 'function');
 
       const evt = new CustomEvent('submit');
-      listener(evt);
-      await new Promise(resolve => setTimeout(resolve, 1));
+      submitListener(evt);
+      await new Promise(resolve => setTimeout(resolve, 301));
       assert.strictEqual(submits.length, 0);
       assert.strictEqual(updates.length, 1);
 
       form['_state'] = { foo: 'bar' };
       form['_errors'] = {};
-      listener(evt);
+      submitListener(evt);
       await new Promise(resolve => setTimeout(resolve, 1));
       assert.strictEqual(submits.length, 1);
       assert.strictEqual(updates.length, 1);
+    });
+  });
+
+  describe('#valid', () => {
+    it('true if no error', () => {
+      const form = new Form({
+        foo: new StringField(),
+      });
+      assert.strictEqual(form.valid, true);
+      form['_errors'] = {
+        foo: 'ouch',
+      };
+      assert.strictEqual(form.valid, false);
     });
   });
 });

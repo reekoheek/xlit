@@ -3,24 +3,24 @@ import { Form } from './Form.js';
 import { Directive, DirectiveResult, PartInfo, PartType, directive } from 'lit/directive.js';
 import { FormError } from './FormError.js';
 
-interface FieldElement extends Element {
+interface BindElement extends Element {
   value?: unknown;
   error?: string;
 }
 
-class FieldDirective extends Directive {
+class BindDirective extends Directive {
   private changeEventListener?: EventListener;
 
   constructor(partInfo: PartInfo) {
     super(partInfo);
 
     if (partInfo.type !== PartType.ELEMENT) {
-      throw new FormError('field directive must be used in element');
+      throw new FormError('bind directive must be used in element');
     }
   }
 
   update(part: ElementPart, [form, name]: [Form, string]): unknown {
-    const el = part.element as FieldElement;
+    const el = part.element as BindElement;
 
     if (!this.changeEventListener) {
       this.changeEventListener = form.handleInput(name);
@@ -30,7 +30,7 @@ class FieldDirective extends Directive {
 
     el.value = form.state[name];
     el.error = form.errors[name];
-    return noChange;
+    return this.render();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,11 +40,14 @@ class FieldDirective extends Directive {
   }
 }
 
-const fieldDirective = directive(FieldDirective);
+const bindDirective = directive(BindDirective);
 
-export class FormController<TModel> extends Form<TModel> implements ReactiveController {
-  constructor(private host: ReactiveControllerHost, types: ConstructorParameters<typeof Form<TModel>>[0]) {
-    super(types, () => this.host.requestUpdate());
+export class FormController<TModel extends object = Record<string, unknown>>
+  extends Form<TModel>
+  implements ReactiveController {
+  constructor(private host: ReactiveControllerHost, fields: ConstructorParameters<typeof Form<TModel>>[0]) {
+    super(fields);
+    this.addUpdateHandler(() => this.host.requestUpdate());
     this.host.addController(this);
   }
 
@@ -52,7 +55,7 @@ export class FormController<TModel> extends Form<TModel> implements ReactiveCont
     // noop
   }
 
-  field(name: string): DirectiveResult<typeof FieldDirective> {
-    return fieldDirective(this, name);
+  bind(name: string): DirectiveResult<typeof BindDirective> {
+    return bindDirective(this, name);
   }
 }

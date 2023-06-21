@@ -14,6 +14,7 @@ npm i @xlit/form
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { FormController } from '@xlit/form';
+import { StringField } from '@xlit/form/StringField.js';
 
 interface Model {
   foo: string;
@@ -23,8 +24,8 @@ interface Model {
 @customElement('page-foo')
 class PageFoo extends LitElement {
   form = new FormController<Model>(this, {
-    foo: new StringType().required(),
-    bar: new StringType().required(),
+    foo: new StringField().required(),
+    bar: new StringField().required(),
   });
 
   render (): unknown {

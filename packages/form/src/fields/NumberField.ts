@@ -1,9 +1,9 @@
-import { Type, ValidationError, Maybe } from '../index.js';
+import { Field, Maybe } from '../index.js';
 
-export class NumberType extends Type<number> {
+export class NumberField extends Field<number> {
   cast(value: unknown): Maybe<number> {
     if (value === '' || value === null || value === undefined) {
-      return;
+      return undefined;
     }
 
     if (typeof value === 'number') {
@@ -17,7 +17,7 @@ export class NumberType extends Type<number> {
       }
     }
 
-    throw new ValidationError('must be number');
+    throw new Error('invalid number');
   }
 
   min(min: number, message?: string) {
@@ -27,7 +27,7 @@ export class NumberType extends Type<number> {
       }
 
       if (value < min) {
-        throw new ValidationError(message ?? `minimum value must be ${min}`);
+        throw new Error(message ?? `minimum value must be ${min}`);
       }
 
       return Promise.resolve(value);
@@ -41,7 +41,7 @@ export class NumberType extends Type<number> {
       }
 
       if (value > max) {
-        throw new ValidationError(message ?? `maximum value must be ${max}`);
+        throw new Error(message ?? `maximum value must be ${max}`);
       }
 
       return Promise.resolve(value);

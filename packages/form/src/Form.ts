@@ -1,85 +1,91 @@
-import { Type } from './Type.js';
-import { ValidationError } from './ValidationError.js';
+import { Field } from './Field.js';
+import { Schema } from './Schema.js';
+import { SchemaError } from './SchemaError.js';
 
-interface KeyValue {
-  [key: string]: unknown;
-}
+const UPDATE_DEBOUNCE_TIMEOUT = 300;
 
-type Types<T> = {
+type Fields<T> = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key in keyof Required<T>]: Type<any>;
+  [key in keyof T]: Field<any>;
 };
 
 type Errors<T> = {
-  [key in keyof Partial<T>]: string;
+  [key in keyof T]?: string;
 };
 
 type State<T> = Partial<T>;
 
+type Keys<T> = (keyof T)[];
+
 type SubmitHandler<TModel> = (model: TModel) => unknown;
 type UpdateHandler = () => unknown;
 
-export class Form<TModel = KeyValue> {
+export class Form<TModel extends object = Record<string, unknown>> {
   private _state: State<TModel> = {} as State<TModel>;
   private _errors: Errors<TModel> = {} as Errors<TModel>;
   private updateHandlers: UpdateHandler[] = [];
+  private schema: Schema<TModel>;
+  private _updateDebounceT?: number;
 
-  get state() {
-    return this._state as Readonly<State<TModel>>;
+  get state(): Readonly<State<TModel>> {
+    return this._state;
   }
 
-  get errors() {
-    return this._errors as Readonly<Errors<TModel>>;
+  get errors(): Readonly<Errors<TModel>> {
+    return this._errors;
   }
 
-  get invalid() {
-    return Object.keys(this._errors).length !== 0;
+  get valid(): boolean {
+    return Object.keys(this._errors).length === 0;
   }
 
-  constructor(private types: Types<TModel>, updateHandler?: UpdateHandler) {
-    if (updateHandler) {
-      this.addUpdateHandler(updateHandler);
-    }
+  constructor(fields: Fields<TModel>) {
+    this.schema = new Schema(fields);
   }
 
-  addUpdateHandler(updateHandler: UpdateHandler) {
+  addUpdateHandler(updateHandler: UpdateHandler): this {
     this.updateHandlers.push(updateHandler);
     return this;
   }
 
-  removeUpdateHandler(updateHandler: UpdateHandler) {
+  removeUpdateHandler(updateHandler: UpdateHandler): this {
     const index = this.updateHandlers.indexOf(updateHandler);
     if (index !== -1) {
       this.updateHandlers.splice(index, 1);
     }
+    return this;
   }
 
-  async set(key: keyof Types<TModel>, value: unknown): Promise<void> {
-    const state = this._state;
-    const type = this.types[key];
+  async setState(state: State<TModel>): Promise<void> {
+    let resultState: State<TModel> = {};
+
+    const keys = Object.keys(state) as Keys<TModel>;
+
+    let resultErr: SchemaError<TModel> | undefined;
 
     try {
-      delete this._errors[key];
-      value = type.cast(value);
-      value = await type.resolve(value);
+      resultState = this.schema.cast(state) ?? {};
+      resultState = await this.schema.runFilters(resultState as TModel, true) ?? {};
     } catch (err) {
-      this._errors[key] = (err as Error).message;
-    } finally {
-      state[key] = value as TModel[typeof key];
-      if (value === undefined || value === null) {
-        delete state[key];
+      if (!(err instanceof SchemaError)) {
+        throw err;
       }
+      resultErr = err;
     }
+
+    for (const key of keys) {
+      if (resultErr?.children[key] === undefined) delete this._errors[key];
+      else this._errors[key] = resultErr.children[key].message;
+      if (resultState[key] === undefined) delete this._state[key];
+      else this._state[key] = resultState[key];
+    }
+    this.update();
   }
 
-  handleInput(key: keyof Types<TModel>) {
+  handleInput(key: keyof Fields<TModel>) {
     return async(evt: Event) => {
-      try {
-        const value = (evt.target as HTMLInputElement).value;
-        await this.set(key, value);
-      } finally {
-        this.update();
-      }
+      const value = (evt.target as HTMLInputElement).value;
+      await this.setState({ [key]: value } as State<TModel>);
     };
   }
 
@@ -87,7 +93,7 @@ export class Form<TModel = KeyValue> {
     return async(evt: Event) => {
       try {
         evt.preventDefault();
-        await this.assert();
+        await this.validate();
         fn(this._state as TModel);
       } catch (err) {
         this.update();
@@ -95,18 +101,14 @@ export class Form<TModel = KeyValue> {
     };
   }
 
-  async assert(): Promise<void> {
-    const state = this._state as KeyValue;
-    await Promise.all(Object.keys(this.types).map(async(key) => {
-      await this.set(key as keyof TModel, state[key]);
-    }));
-
-    if (this.invalid) {
-      throw new ValidationError('invalid form');
-    }
+  async validate(): Promise<void> {
+    await this.schema.resolve(this._state);
   }
 
   protected update() {
-    this.updateHandlers.forEach((update) => update());
+    clearTimeout(this._updateDebounceT);
+    this._updateDebounceT = setTimeout(() => {
+      this.updateHandlers.forEach((update) => update());
+    }, UPDATE_DEBOUNCE_TIMEOUT);
   }
 }

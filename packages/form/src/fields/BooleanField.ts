@@ -1,9 +1,9 @@
-import { Type, ValidationError, Maybe } from '../index.js';
+import { Field, Maybe } from '../index.js';
 
-export class BooleanType extends Type<boolean> {
+export class BooleanField extends Field<boolean> {
   cast(value: unknown): Maybe<boolean> {
     if (value === '' || value === null || value === undefined) {
-      return;
+      return undefined;
     }
 
     if (typeof value === 'boolean') {
@@ -18,6 +18,6 @@ export class BooleanType extends Type<boolean> {
       return false;
     }
 
-    throw new ValidationError('must be boolean');
+    throw new Error('invalid boolean');
   }
 }
