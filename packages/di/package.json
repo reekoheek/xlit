@@ -59,8 +59,7 @@
         "./src/**/*.ts"
       ],
       "output": [
-        "./index.js{,.map}",
-        "./types/*.js{,.map"
+        "./index.js{,.map}"
       ]
     },
     "build:types": {
