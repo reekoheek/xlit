@@ -174,9 +174,9 @@ describe('Router', () => {
       assert.strictEqual(outlet.element?.nodeName, 'FOO');
     });
 
-    it('throw error if route not found', async() => {
+    it('throw error if no result', async() => {
       const router = new Router(new MockOutlet(), mockOptions());
-      await assertRejects(() => router.push('/not-found'), /route not found/);
+      await assertRejects(() => router.push('/not-found'), /no result route/);
     });
 
     it('route to static route', async() => {

@@ -95,14 +95,16 @@ export class Router {
       await invokeMiddlewareChain(this.middlewares, ctx, async() => {
         const route = this.routes.find(r => r.test(ctx));
         if (!route) {
-          throw new RouterError('route not found');
+          return;
         }
         ctx.result = await route.invoke(ctx);
       });
 
-      if (ctx.result) {
-        await this.outlet.render(toContextedElement(ctx.result, ctx));
+      if (!ctx.result) {
+        throw new RouterError('no result route');
       }
+
+      await this.outlet.render(toContextedElement(ctx.result, ctx));
     } finally {
       this._dispatching.resolve();
     }

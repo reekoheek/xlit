@@ -8,11 +8,12 @@
   "sideEffects": false,
   "files": [
     "/index.{js,js.map}",
-    "/*.{d.ts,d.ts.map}"
+    "/*.{d.ts,d.ts.map}",
+    "/middlewares/"
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf coverage index.js *.d.ts *.map",
+    "clean": "rm -rf coverage middlewares index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
@@ -50,12 +51,13 @@
       ]
     },
     "build:js": {
-      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./",
+      "command": "esbuild ./src/index.ts ./src/middlewares/*.ts --packages=external --external:../index.js --bundle --format=esm --minify --sourcemap --outdir=./",
       "files": [
         "./src/**/*.ts"
       ],
       "output": [
-        "./index.js{,.map}"
+        "./index.js{,.map}",
+        "./middlewares/*.js{,.map"
       ]
     },
     "build:types": {
