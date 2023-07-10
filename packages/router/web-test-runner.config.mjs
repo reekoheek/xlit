@@ -4,7 +4,7 @@ export default {
   files: [
     './src/**/*.test.ts',
   ],
-  port: 7004,
+  port: 7005,
   nodeResolve: true,
   coverage: true,
   coverageConfig: {

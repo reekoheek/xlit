@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf coverage fields index.js *.d.ts *.map",
+    "clean": "rm -rf .wireit coverage fields index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
