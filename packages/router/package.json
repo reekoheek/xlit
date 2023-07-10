@@ -71,6 +71,9 @@
     },
     "test": {
       "command": "wtr",
+      "dependencies": [
+        "../testutil:build"
+      ],
       "files": [
         "./src/**/*.ts"
       ],

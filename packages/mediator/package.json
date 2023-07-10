@@ -69,6 +69,9 @@
     },
     "test": {
       "command": "vitest run --coverage",
+      "dependencies": [
+        "../di:build"
+      ],
       "files": [
         "./src/**/*.ts"
       ],
