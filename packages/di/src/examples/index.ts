@@ -10,6 +10,7 @@ class Foo {
 }
 
 (async() => {
-  const foo = await injected(new Foo());
+  const foo = new Foo();
+  await injected(foo);
   alert('This value injected from container: ' + foo.bar);
 })();

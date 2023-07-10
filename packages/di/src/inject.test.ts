@@ -1,9 +1,9 @@
+import { describe, it, expect } from 'vitest';
 import { Container } from './Container.js';
 import { instance } from './instance.js';
 import { injected } from './injected.js';
 import { inject } from './inject.js';
 import { lookup } from './lookup.js';
-import { assert } from '@open-wc/testing';
 import { provide } from './provide.js';
 
 describe('inject()', () => {
@@ -23,8 +23,8 @@ describe('inject()', () => {
 
     const component = new Component();
     await injected(component);
-    assert.strictEqual(component.foo, 'foo');
-    assert.strictEqual(component.bar, 'bar');
+    expect(component.foo).toStrictEqual('foo');
+    expect(component.bar).toStrictEqual('bar');
   });
 
   it('inject provides', async() => {
@@ -41,8 +41,8 @@ describe('inject()', () => {
 
     const component = new Component();
     await injected(component);
-    assert.strictEqual(component.foo, 'foo');
-    assert.strictEqual(component.bar, 'bar');
+    expect(component.foo).toStrictEqual('foo');
+    expect(component.bar).toStrictEqual('bar');
   });
 
   it('inject provide class', async() => {
@@ -54,7 +54,7 @@ describe('inject()', () => {
     }
 
     const component: Component = await container.lookup('component');
-    assert.strictEqual(component instanceof Component, true);
+    expect(component).instanceOf(Component);
   });
 
   it('inject provide class with transient scope', async() => {
@@ -67,17 +67,16 @@ describe('inject()', () => {
 
     const component1: Component = await container.lookup('component');
     const component2: Component = await container.lookup('component');
-    assert.notStrictEqual(component1, component2);
+    expect(component1).toStrictEqual(component2);
   });
 
   it('throw error if nothing to inject', () => {
     const container = new Container();
-
-    assert.throws(() => {
+    expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       @inject(container) class Component {
       }
-    }, /nothing to inject/);
+    }).toThrow(/nothing to inject/);
   });
 
   it('lookup from inherited object', async() => {
@@ -99,8 +98,8 @@ describe('inject()', () => {
     const child = new Child();
     await injected(child);
 
-    assert.strictEqual(child.foo, 'foo');
-    assert.strictEqual(child.bar, 'bar');
+    expect(child.foo).toStrictEqual('foo');
+    expect(child.bar).toStrictEqual('bar');
   });
 
   it('throw error if provide from parent', () => {
@@ -111,12 +110,12 @@ describe('inject()', () => {
       foo = 'foo';
     }
 
-    assert.throws(() => {
+    expect(() => {
       @inject(container)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       class Child extends Parent {
       }
-    }, /provide must be immediately injected/);
+    }).toThrow(/provide must be immediately injected/);
   });
 
   it('throw error if provide class from parent', () => {
@@ -127,11 +126,11 @@ describe('inject()', () => {
       foo = 'foo';
     }
 
-    assert.throws(() => {
+    expect(() => {
       @inject(container)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       class Child extends Parent {
       }
-    }, /provide class must be immediately injected/);
+    }).toThrow(/provide class must be immediately injected/);
   });
 });

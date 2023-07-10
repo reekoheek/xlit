@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf coverage index.js *.d.ts *.map",
+    "clean": "rm -rf .wireit coverage index.js *.d.ts *.map",
     "lint": "wireit",
     "lint:eslint": "wireit",
     "lint:ts": "wireit",
@@ -20,7 +20,7 @@
     "build:js": "wireit",
     "build:types": "wireit",
     "test": "wireit",
-    "test:watch": "wtr --watch",
+    "test:watch": "vitest watch --coverage",
     "examples": "vite ./src/examples"
   },
   "wireit": {
@@ -72,7 +72,7 @@
       ]
     },
     "test": {
-      "command": "wtr",
+      "command": "vitest run --coverage",
       "files": [
         "./src/**/*.ts"
       ],
@@ -97,8 +97,5 @@
   "homepage": "https://github.com/reekoheek/xlit#readme",
   "publishConfig": {
     "access": "public"
-  },
-  "devDependencies": {
-    "testutil": "workspace:*"
   }
 }

@@ -1,5 +1,4 @@
-import { assert } from '@open-wc/testing';
-import { assertRejects } from 'testutil';
+import { describe, it, expect } from 'vitest';
 import { Container, instance } from './index.js';
 
 describe('Container', () => {
@@ -9,7 +8,7 @@ describe('Container', () => {
         .provide('bar', () => 'bar')
         .provide('baz', () => 'baz');
 
-      assert.deepStrictEqual(['bar', 'baz'], Object.keys(container['fns']));
+      expect(Object.keys(container['fns'])).toMatchObject(['bar', 'baz']);
     });
   });
 
@@ -18,12 +17,12 @@ describe('Container', () => {
       const container = new Container();
       let hit = 0;
       container.provide('obj', (c) => {
-        assert.strictEqual(c, container);
+        expect(c).toStrictEqual(container);
         hit++;
         return hit;
       });
-      assert.strictEqual(1, await container.lookup('obj'));
-      assert.strictEqual(2, await container.lookup('obj'));
+      expect(await container.lookup('obj')).toStrictEqual(1);
+      expect(await container.lookup('obj')).toStrictEqual(2);
     });
   });
 
@@ -31,8 +30,8 @@ describe('Container', () => {
     it('lookup instance', async() => {
       const container = new Container()
         .provide('foo', instance('foo'));
-      assert.strictEqual(await container.lookup('foo'), 'foo');
-      await assertRejects(() => container.lookup('bar'), /provider not found to lookup "bar"/);
+      expect(await container.lookup('foo')).toStrictEqual('foo');
+      expect(async() => await container.lookup('bar')).rejects.toThrow(/provider not found to lookup "bar"/);
     });
   });
 });

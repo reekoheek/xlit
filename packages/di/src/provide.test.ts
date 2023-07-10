@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { provide } from './provide.js';
 import { metadataOf } from './Metadata.js';
 
@@ -12,7 +12,7 @@ describe('provide()', () => {
 
     const metadata = metadataOf(Component.prototype);
 
-    assert.strictEqual(metadata['provideClassEntry']?.to, 'component');
-    assert.strictEqual(metadata['provideEntries'].length, 1);
+    expect(metadata['provideClassEntry']?.to).toStrictEqual('component');
+    expect(metadata['provideEntries']?.length).toStrictEqual(1);
   });
 });

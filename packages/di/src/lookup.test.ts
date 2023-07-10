@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { lookup } from './lookup.js';
 import { metadataOf } from './Metadata.js';
 
@@ -13,6 +13,6 @@ describe('lookup()', () => {
     }
 
     const metadata = metadataOf(Component.prototype);
-    assert.strictEqual(metadata['lookupEntries'].length, 2);
+    expect(metadata['lookupEntries'].length).toStrictEqual(2);
   });
 });
