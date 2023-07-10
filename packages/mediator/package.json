@@ -1,0 +1,99 @@
+{
+  "name": "@xlit/mediator",
+  "version": "2.4.0",
+  "description": "xlit command and query mediator",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "/index.{js,js.map}",
+    "/*.{d.ts,d.ts.map}"
+  ],
+  "scripts": {
+    "prepublish": "pnpm clean; pnpm lint && pnpm build",
+    "clean": "rm -rf .wireit coverage index.js *.d.ts *.map",
+    "lint": "wireit",
+    "lint:eslint": "wireit",
+    "lint:ts": "wireit",
+    "build": "wireit",
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "wireit",
+    "test:watch": "vitest watch --coverage"
+  },
+  "wireit": {
+    "lint": {
+      "dependencies": [
+        "lint:eslint",
+        "lint:ts"
+      ]
+    },
+    "lint:eslint": {
+      "command": "eslint ./src",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
+    "lint:ts": {
+      "command": "tsc --noEmit",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
+    "build": {
+      "dependencies": [
+        "build:js",
+        "build:types"
+      ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./index.js{,.map}"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "vitest run --coverage",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "form",
+    "customelements",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@xlit/di": "workspace:*"
+  }
+}
