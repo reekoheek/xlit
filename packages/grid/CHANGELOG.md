@@ -1,5 +1,11 @@
 # @xlit/form
 
+## 2.5.0
+
+### Minor Changes
+
+- introduce event and mediator
+
 ## 2.4.0
 
 ### Minor Changes

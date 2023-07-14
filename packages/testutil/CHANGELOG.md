@@ -1,5 +1,11 @@
 # testutil
 
+## 2.4.0
+
+### Minor Changes
+
+- introduce event and mediator
+
 ## 2.3.1
 
 ### Patch Changes
