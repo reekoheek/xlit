@@ -29,23 +29,44 @@ class PageFoo extends LitElement {
   });
 
   render (): unknown {
-    <form @submit="${this.form.submit(this.onSubmit)}">
-      <div>
-        <label>Foo</label>
-        <input type="text" ${this.form.field('foo')}>
-        <span class="form-text">${this.form.errors.foo}</span>
-      </div>
+    return html`
+      <form @submit="${this.form.submit(this.onSubmit)}">
+        <div>
+          <label>Foo</label>
+          <input type="text" ${this.form.field('foo')}>
+          <span class="form-text">${this.form.errors.foo}</span>
+        </div>
 
-      <div>
-        <label>Bar</label>
-        <input type="text" ${this.form.field('bar')}>
-        <span class="form-text">${this.form.errors.bar}</span>
-      </div>
-    </form>
+        <div>
+          <label>Bar</label>
+          <input type="text" ${this.form.field('bar')}>
+          <span class="form-text">${this.form.errors.bar}</span>
+        </div>
+      </form>
+    `;
   }
 
   onSubmit (model: Model) {
     // do something with the model here
   }
 }
+```
+
+## Use schema to validate object
+
+```typescript
+import { Schema } from '@xlit/form';
+
+interface Model {
+  foo: string;
+  bar: string;
+}
+
+const schema = new Schema<Model>({
+  foo: new StringField().required(),
+  bar: new StringField().required(),
+});
+
+const obj = {};
+const result = await schema.mustResolve(obj);
 ```

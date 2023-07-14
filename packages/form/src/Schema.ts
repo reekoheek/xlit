@@ -72,4 +72,13 @@ export class Schema<TValue extends object> {
   resolve(state: Partial<TValue>): Promise<Maybe<TValue>> {
     return this.runFilters(this.cast(state));
   }
+
+  async mustResolve(state: Partial<TValue>): Promise<TValue> {
+    const value = await this.resolve(state);
+    if (!value) {
+      throw new SchemaError('undefined object');
+    }
+
+    return value;
+  }
 }
