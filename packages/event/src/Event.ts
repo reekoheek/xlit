@@ -1,4 +1,4 @@
 export interface Event {
-  readonly kind: string;
-  readonly at: Date;
+  kind: string;
+  at: Date;
 }

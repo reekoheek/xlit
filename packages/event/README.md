@@ -1,6 +1,6 @@
 # @xlit/event
 
-Event mechanism
+Work with events
 
 ## Installation
 
@@ -11,7 +11,7 @@ npm i @xlit/event
 ## Getting started
 
 ```typescript
-import { DefaultEventDispatcher, select } from '@xlit/event';
+import { MemoryEventBus, select } from '@xlit/event';
 
 class Event1 {
   kind = 'Event1';
@@ -21,20 +21,20 @@ class Event2 {
   kind = 'Event2';
 }
 
-const dispatcher = new DefaultEventDispatcher();
+const bus = new MemoryEventBus();
 
-dispatcher.add((evt) => {
-  // all events
+bus.addHandler((evt) => {
+  // handle all events
 });
 
-dispatcher.add(select('Event1', (evt: Event1) => {
-  // only Event1 events
+bus.addHandler(select('Event1', (evt: Event1) => {
+  // handle only Event1 events
 }));
 
-dispatcher.add(select('Event2', (evt: Event2) => {
-  // only Event2 events
+bus.addHandler(select('Event2', (evt: Event2) => {
+  // handle only Event2 events
 }));
 
-dispatcher.dispatchEvent(new Event1());
-dispatcher.dispatchEvent(new Event2());
+bus.dispatchEvent(new Event1());
+bus.dispatchEvent(new Event2());
 ```
