@@ -1,17 +1,14 @@
 import { Context } from './Context.js';
 import { toContextedElement } from './ContextedElement.js';
 import { HistoryMode } from './HistoryMode.js';
+import { Middleware } from './Middleware.js';
 import { DefaultOutlet, Outlet, isOutlet } from './Outlet.js';
 import { Route, RouteFn } from './Route.js';
 import { RouterError } from './RouterError.js';
 import { Todo, todo } from './Todo.js';
 import { EventTargetInterface, HistoryInterface, LocationInterface, ModeInterface } from './types.js';
 
-type Next = () => Promise<void>
-
-export type Middleware = (ctx: Context, next: Next) => Promise<void>;
-
-type OutletArg = Outlet | Element;
+type OutletArg<TState extends object> = Outlet<TState> | Element;
 
 interface RouterOptions {
   readonly mode?: ModeInterface;
@@ -21,16 +18,17 @@ interface RouterOptions {
   readonly location?: LocationInterface;
 }
 
-export class Router {
-  private outlet: Outlet;
-  private routes: Route[] = [];
-  private middlewares: Middleware[] = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export class Router<TState extends object = any> {
+  private outlet: Outlet<TState>;
+  private routes: Route<TState>[] = [];
+  private middlewares: Middleware<TState>[] = [];
   private mode: ModeInterface;
   private eventTarget: EventTargetInterface;
   private history: HistoryInterface;
   private location: LocationInterface;
 
-  private ctx?: Context;
+  private ctx?: Context<TState>;
   private _dispatching?: Todo<void>;
 
   private popstateListener: EventListener = async() => {
@@ -51,7 +49,7 @@ export class Router {
     await this.dispatch(ctx);
   };
 
-  constructor(outlet: OutletArg, opts?: RouterOptions) {
+  constructor(outlet: OutletArg<TState>, opts?: RouterOptions) {
     this.outlet = isOutlet(outlet) ? outlet : new DefaultOutlet(outlet);
     this.mode = opts?.mode ?? new HistoryMode();
     this.eventTarget = opts?.eventTarget ?? window;
@@ -71,17 +69,17 @@ export class Router {
     this.eventTarget.removeEventListener('click', this.clickListener);
   }
 
-  use(middleware: Middleware): this {
+  use(middleware: Middleware<TState>): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  route(path: string, fn: RouteFn): this {
+  route(path: string, fn: RouteFn<TState>): this {
     this.routes.push(new Route(path, fn));
     return this;
   }
 
-  private async dispatch(ctx: Context): Promise<void> {
+  private async dispatch(ctx: Context<TState>): Promise<void> {
     if (this.ctx?.equals(ctx)) {
       return;
     }
@@ -131,7 +129,11 @@ export class Router {
   }
 }
 
-function invokeMiddlewareChain(middlewares: Middleware[], ctx: Context, core: Middleware): Promise<void> {
+function invokeMiddlewareChain<TState extends object>(
+  middlewares: Middleware<TState>[],
+  ctx: Context<TState>,
+  core: Middleware<TState>,
+): Promise<void> {
   const dispatch = (i: number): Promise<void> => {
     const fn = i === middlewares.length ? core : middlewares[i];
     return fn(ctx, () => dispatch(i + 1));

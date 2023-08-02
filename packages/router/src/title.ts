@@ -1,6 +1,6 @@
-import type { Middleware } from '../index.js';
+import { Middleware } from './Middleware.js';
 
-export function title(appName: string): Middleware {
+export function title<TState extends object>(appName: string): Middleware<TState> {
   return async(ctx, next) => {
     await next();
 

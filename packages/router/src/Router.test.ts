@@ -24,7 +24,11 @@ describe('Router', () => {
   describe('@click', () => {
     it('propagate if target is not link', async() => {
       const root: HTMLElement = await fixture(html`
-        <root><target><child></child></target></root>
+        <root>
+          <target>
+            <child></child>
+          </target>
+        </root>
       `);
       let invoked = false;
       root.addEventListener('click', (evt) => {
@@ -32,10 +36,7 @@ describe('Router', () => {
         evt.preventDefault();
         invoked = true;
       });
-      const target = root.querySelector('target');
-      if (!target) {
-        throw new Error('invalid target');
-      }
+      const target = root.querySelector('target') as HTMLElement;
       const mock = mockOptions({ eventTarget: target });
       const r = new Router(new MockOutlet(), mock);
       r.route('*', createRouteFn('div'));
@@ -57,13 +58,11 @@ describe('Router', () => {
         evt.preventDefault();
         invoked = true;
       });
-      const target = root.querySelector('target');
-      if (!target) {
-        throw new Error('invalid target');
-      }
+      const target = root.querySelector('target') as HTMLElement;
       const mock = mockOptions({ eventTarget: target });
       const r = new Router(new MockOutlet(), mock);
-      const dispatchedContexts: Context[] = [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dispatchedContexts: Context<any>[] = [];
       r['dispatch'] = (ctx) => {
         dispatchedContexts.push(ctx);
         return Promise.resolve();

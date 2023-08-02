@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es2019",
+    "target": "es2020",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": false,
     "module": "es2020",
     "moduleResolution": "node16",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./",
+    "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,

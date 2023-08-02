@@ -1,13 +1,13 @@
 import { Context } from './Context.js';
 import { RouterError } from './RouterError.js';
 
-export type RouteFn = (ctx: Context) => Promise<Element>;
+export type RouteFn<TState extends object> = (ctx: Context<TState>) => Promise<Element>;
 
-export class Route {
+export class Route<TState extends object> {
   private pattern?: RegExp;
   private args: string[] = [];
 
-  constructor(private path: string, private fn: RouteFn) {
+  constructor(private path: string, private fn: RouteFn<TState>) {
     if (!/[[{]/.exec(path)) {
       return;
     }
@@ -36,14 +36,14 @@ export class Route {
     this.args = args;
   }
 
-  test(ctx: Context): boolean {
+  test(ctx: Context<TState>): boolean {
     if (this.pattern) {
       return Boolean(this.pattern.exec(ctx.path));
     }
     return this.path === '*' || this.path === ctx.path;
   }
 
-  async invoke(ctx: Context): Promise<Element> {
+  async invoke(ctx: Context<TState>): Promise<Element> {
     if (this.pattern) {
       const matched = this.pattern.exec(ctx.path) as RegExpMatchArray;
       this.args.forEach((arg, i) => (ctx.params[arg] = matched[i + 1]));

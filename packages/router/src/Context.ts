@@ -1,13 +1,13 @@
 import { Router } from './Router.js';
-import { RouterError } from './RouterError.js';
 
-export class Context {
+export class Context<TState extends object> {
   readonly path: string;
   readonly query: Record<string, string> = {};
   readonly params: Record<string, string> = {};
-  result?: Element;
 
-  private state: Record<string, unknown> = {};
+  public result?: Element;
+
+  private state: Partial<TState> = {};
 
   constructor(readonly router: Router, path: string) {
     const url = new URL(path, 'http://localhost');
@@ -15,7 +15,7 @@ export class Context {
     this.path = url.pathname;
   }
 
-  equals(ctx: Context): boolean {
+  equals(ctx: Context<TState>): boolean {
     if (this.path !== ctx.path) {
       return false;
     }
@@ -26,20 +26,5 @@ export class Context {
       }
     }
     return true;
-  }
-
-  get<T>(key: string): T | undefined {
-    return this.state[key] as T;
-  }
-
-  set(key: string, value: unknown) {
-    if (value === undefined || value === null) {
-      throw new RouterError('cannot set state to empty, do you mean to remove state?');
-    }
-    this.state[key] = value;
-  }
-
-  remove(key: string) {
-    delete this.state[key];
   }
 }
