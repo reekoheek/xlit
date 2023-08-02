@@ -1,21 +1,19 @@
 {
   "name": "@xlit/grid",
-  "version": "2.5.0",
-  "description": "xlit form custom element",
+  "version": "2.5.1",
+  "description": "xlit draggable grid layout custom element",
   "type": "module",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
-    "/index.{js,js.map}",
-    "/*.{d.ts,d.ts.map}"
+    "/dist"
   ],
   "scripts": {
-    "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf .wireit coverage index.js *.d.ts *.map",
-    "lint": "wireit",
-    "lint:eslint": "wireit",
-    "lint:ts": "wireit",
+    "prepublishOnly": "pnpm checkall",
+    "clean": "rm -rf .wireit coverage dist",
+    "checkall": "pnpm clean; pnpm lint && pnpm test && pnpm build",
+    "lint": "eslint ./src && tsc --noEmit",
     "build": "wireit",
     "build:js": "wireit",
     "build:types": "wireit",
@@ -23,39 +21,22 @@
     "test:watch": "wtr --watch"
   },
   "wireit": {
-    "lint": {
-      "dependencies": [
-        "lint:eslint",
-        "lint:ts"
-      ]
-    },
-    "lint:eslint": {
-      "command": "eslint ./src",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": []
-    },
-    "lint:ts": {
-      "command": "tsc --noEmit",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": []
-    },
     "build": {
       "dependencies": [
         "build:js",
         "build:types"
+      ],
+      "files": [
+        "./src/**/*.ts"
       ]
     },
     "build:js": {
-      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./",
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist",
       "files": [
         "./src/**/*.ts"
       ],
       "output": [
-        "./index.js{,.map}"
+        "./dist/index.js{,.map}"
       ]
     },
     "build:types": {
@@ -64,14 +45,11 @@
         "./src/**/*.ts"
       ],
       "output": [
-        "*.d.ts{,.map}"
+        "./dist/*.d.ts{,.map}"
       ]
     },
     "test": {
       "command": "wtr",
-      "dependencies": [
-        "../testutil:build"
-      ],
       "files": [
         "./src/**/*.ts"
       ],
@@ -83,7 +61,8 @@
     "url": "git+https://github.com/reekoheek/xlit.git"
   },
   "keywords": [
-    "form",
+    "grid",
+    "layout",
     "customelements",
     "webcomponents"
   ],
@@ -96,10 +75,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "devDependencies": {
-    "testutil": "workspace:*"
-  },
   "dependencies": {
-    "lit": "^2.7.5"
+    "lit": "^2.7.6"
   }
 }

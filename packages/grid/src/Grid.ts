@@ -5,7 +5,8 @@ import { repeat } from 'lit/directives/repeat.js';
 import { Layout } from './Layout.js';
 import { Item } from './Item.js';
 import { Dimension, Point, Rect } from './types.js';
-import { GridError, GridItemCollisionError } from './GridError.js';
+import { GridError } from './GridError.js';
+import { ItemCollisionGridError } from './ItemCollisionGridError.js';
 
 interface ItemElement extends Element {
   item: Item;
@@ -84,13 +85,13 @@ export class Grid extends LitElement {
   @query('.container')
   container!: HTMLElement;
 
-  @property()
+  @property({ type: Number })
   cols = 12;
 
-  @property()
+  @property({ type: Number })
   gutter = 5;
 
-  @property()
+  @property({ type: Number })
   hfactor = 0.5;
 
   @state()
@@ -164,7 +165,7 @@ export class Grid extends LitElement {
           el.item = item;
           return true;
         } catch (err) {
-          if (err instanceof GridItemCollisionError) {
+          if (err instanceof ItemCollisionGridError) {
             item = item.clone();
             item.y = item.y + 1;
             continue;

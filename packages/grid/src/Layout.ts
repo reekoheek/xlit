@@ -1,4 +1,5 @@
-import { GridError, GridItemCollisionError } from './GridError.js';
+import { GridError } from './GridError.js';
+import { ItemCollisionGridError } from './ItemCollisionGridError.js';
 import { Item } from './Item.js';
 
 export class Layout {
@@ -126,7 +127,7 @@ export class Layout {
   assertCollisionFound(item: Item) {
     const collisions = this.getCollisions(item);
     if (collisions.length) {
-      throw new GridItemCollisionError('item collision found');
+      throw new ItemCollisionGridError('item collision found');
     }
   }
 }
