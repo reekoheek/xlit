@@ -1,114 +1,114 @@
-import { Field } from './Field.js';
-import { Schema } from './Schema.js';
-import { SchemaError } from './SchemaError.js';
+import { NestedSchemaError, ObjectShape, ObjectType } from '@xlit/schema';
+import { ReactiveController, ReactiveControllerHost } from 'lit';
+import { DirectiveResult } from 'lit/directive.js';
+import { BindFieldDirective, FieldChangeEventName, bindFieldDirective } from './bindFieldDirective.js';
 
-const UPDATE_DEBOUNCE_TIMEOUT = 300;
+type identity<T> = T;
+type Key<T extends ObjectShape> = keyof T;
+type Schema<T extends ObjectShape> = ObjectType<T>;
+type Model<T extends ObjectShape> = NonNullable<Schema<T>['_outputType']>;
+type State<T extends ObjectShape> = Partial<Model<T>>;
+type Errors<T extends ObjectShape> = identity<{ [key in Key<T>]?: string; }>;
+type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => unknown;
 
-type Fields<T> = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key in keyof T]: Field<any>;
-};
+export class Form<TShape extends ObjectShape> implements ReactiveController {
+  private schema: Schema<TShape>;
+  private _state: State<TShape> = {};
+  private _errors: Errors<TShape> = {};
+  private touches = new Set<Key<TShape>>();
 
-type Errors<T> = {
-  [key in keyof T]?: string;
-};
-
-type State<T> = Partial<T>;
-
-type Keys<T> = (keyof T)[];
-
-type SubmitHandler<TModel> = (model: TModel) => unknown;
-type UpdateHandler = () => unknown;
-
-export class Form<TModel extends object = Record<string, unknown>> {
-  private _state: State<TModel> = {} as State<TModel>;
-  private _errors: Errors<TModel> = {} as Errors<TModel>;
-  private updateHandlers: UpdateHandler[] = [];
-  private schema: Schema<TModel>;
-  private _updateDebounceT?: number;
-
-  get state(): Readonly<State<TModel>> {
+  get state(): Readonly<State<TShape>> {
     return this._state;
   }
 
-  get errors(): Readonly<Errors<TModel>> {
+  get errors(): Readonly<Errors<TShape>> {
     return this._errors;
   }
 
-  get valid(): boolean {
-    return Object.keys(this._errors).length === 0;
+  get hasErrors(): boolean {
+    return Object.keys(this.errors).length !== 0;
   }
 
-  constructor(fields: Fields<TModel>) {
-    this.schema = new Schema(fields);
+  get allTouched(): boolean {
+    return this.touches.size === Object.keys(this.shape).length;
   }
 
-  addUpdateHandler(updateHandler: UpdateHandler): this {
-    this.updateHandlers.push(updateHandler);
-    return this;
+  get ok(): boolean {
+    return this.allTouched && !this.hasErrors;
   }
 
-  removeUpdateHandler(updateHandler: UpdateHandler): this {
-    const index = this.updateHandlers.indexOf(updateHandler);
-    if (index !== -1) {
-      this.updateHandlers.splice(index, 1);
+  get model(): Model<TShape> | undefined {
+    if (!this.ok) {
+      return undefined;
     }
-    return this;
+
+    return this.state as Model<TShape>;
   }
 
-  async setState(state: State<TModel>): Promise<void> {
-    let resultState: State<TModel> = {};
+  constructor(private host: ReactiveControllerHost, private shape: TShape, private onSubmit: OnSubmitFn<TShape>) {
+    this.host.addController(this);
+    this.schema = new ObjectType(shape);
+  }
 
-    const keys = Object.keys(state) as Keys<TModel>;
+  hostConnected(): void {
+    // noop
+  }
 
-    let resultErr: SchemaError<TModel> | undefined;
+  async setState(state: State<TShape>): Promise<void> {
+    const partialKeys: Key<TShape>[] = Object.keys(state);
+
+    partialKeys.forEach((key) => {
+      delete this._errors[key];
+      this.touches.add(key);
+    });
 
     try {
-      resultState = this.schema.cast(state) ?? {};
-      resultState = await this.schema.runFilters(resultState as TModel, true) ?? {};
+      const schema = this.schema.pick(partialKeys).required();
+      const newState = await schema.resolve(state);
+      partialKeys.forEach((key) => {
+        delete this._state[key];
+        if (newState[key] !== undefined) {
+          this._state[key] = newState[key];
+        }
+      });
     } catch (err) {
-      if (!(err instanceof SchemaError)) {
+      if (!(err instanceof NestedSchemaError)) {
         throw err;
       }
-      resultErr = err;
+
+      const childErrs = err.children;
+      partialKeys.forEach((key) => {
+        const childErr = childErrs[key];
+        if (childErr) {
+          this._errors[key] = childErr.message;
+        }
+      });
     }
 
-    for (const key of keys) {
-      if (resultErr?.children[key] === undefined) delete this._errors[key];
-      else this._errors[key] = resultErr.children[key].message;
-      if (resultState[key] === undefined) delete this._state[key];
-      else this._state[key] = resultState[key];
-    }
-    this.update();
+    this.host.requestUpdate();
   }
 
-  handleInput(key: keyof Fields<TModel>) {
+  bindInput(key: Key<TShape>): EventListener {
     return async(evt: Event) => {
       const value = (evt.target as HTMLInputElement).value;
-      await this.setState({ [key]: value } as State<TModel>);
+      await this.setState({ [key]: value } as State<TShape>);
     };
   }
 
-  handleSubmit(fn: SubmitHandler<TModel>) {
-    return async(evt: Event) => {
-      try {
-        evt.preventDefault();
-        await this.validate();
-        fn(this._state as TModel);
-      } catch (err) {
-        this.update();
+  bindSubmit(): EventListener {
+    return async(evt) => {
+      evt.preventDefault();
+
+      await this.setState(this.state);
+
+      const model = this.model;
+      if (model) {
+        await this.onSubmit(model);
       }
     };
   }
 
-  async validate(): Promise<void> {
-    await this.schema.resolve(this._state);
-  }
-
-  protected update() {
-    clearTimeout(this._updateDebounceT);
-    this._updateDebounceT = setTimeout(() => {
-      this.updateHandlers.forEach((update) => update());
-    }, UPDATE_DEBOUNCE_TIMEOUT);
+  bindField(key: Key<TShape>, eventNames?: FieldChangeEventName[]): DirectiveResult<typeof BindFieldDirective> {
+    return bindFieldDirective(this, key, eventNames);
   }
 }

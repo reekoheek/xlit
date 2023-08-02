@@ -1,6 +1,6 @@
 # @xlit/form
 
-Lit reactive component for form model, binding and validation
+Lit reactive component for form binding and validation
 
 ## Installation
 
@@ -13,60 +13,38 @@ npm i @xlit/form
 ```typescript
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { FormController } from '@xlit/form';
-import { StringField } from '@xlit/form/StringField.js';
-
-interface Model {
-  foo: string;
-  bar: string;
-}
+import { Form } from '@xlit/form';
+import { StringType } from '@xlit/schema';
 
 @customElement('page-foo')
 class PageFoo extends LitElement {
-  form = new FormController<Model>(this, {
-    foo: new StringField().required(),
-    bar: new StringField().required(),
+  private form = new Form(this, {
+    foo: new StringType().required(),
+    bar: new StringType().required(),
+  }, (model) => {
+    // do something with model here
   });
 
   render (): unknown {
     return html`
-      <form @submit="${this.form.submit(this.onSubmit)}">
+      <form @submit="${this.form.bindSubmit()}">
         <div>
           <label>Foo</label>
-          <input type="text" ${this.form.field('foo')}>
+          <input type="text" ${this.form.bindField('foo')}>
           <span class="form-text">${this.form.errors.foo}</span>
         </div>
 
         <div>
           <label>Bar</label>
-          <input type="text" ${this.form.field('bar')}>
+          <input type="text" ${this.form.bindField('bar')}>
           <span class="form-text">${this.form.errors.bar}</span>
+        </div>
+
+        <div>
+          <input type="submit" value="Submit" .disabled="${!this.form.ok}">
         </div>
       </form>
     `;
   }
-
-  onSubmit (model: Model) {
-    // do something with the model here
-  }
 }
-```
-
-## Use schema to validate object
-
-```typescript
-import { Schema } from '@xlit/form';
-
-interface Model {
-  foo: string;
-  bar: string;
-}
-
-const schema = new Schema<Model>({
-  foo: new StringField().required(),
-  bar: new StringField().required(),
-});
-
-const obj = {};
-const result = await schema.mustResolve(obj);
 ```
