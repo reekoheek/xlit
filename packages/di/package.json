@@ -1,49 +1,26 @@
 {
   "name": "@xlit/di",
-  "version": "2.5.0",
-  "description": "xlit dependency injection custom element",
+  "version": "2.5.1",
+  "description": "xlit dependency injection container",
   "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
-    "/index.{js,js.map}",
-    "/*.{d.ts,d.ts.map}"
+    "/dist"
   ],
   "scripts": {
-    "prepublish": "pnpm clean; pnpm lint && pnpm build",
-    "clean": "rm -rf .wireit coverage index.js *.d.ts *.map",
-    "lint": "wireit",
-    "lint:eslint": "wireit",
-    "lint:ts": "wireit",
+    "prepublishOnly": "pnpm checkall",
+    "clean": "rm -rf .wireit coverage dist",
+    "checkall": "pnpm clean; pnpm lint && pnpm test && pnpm build",
+    "lint": "eslint ./src && tsc --noEmit",
     "build": "wireit",
     "build:js": "wireit",
     "build:types": "wireit",
-    "test": "wireit",
-    "test:watch": "vitest watch --coverage",
-    "examples": "vite ./src/examples"
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage"
   },
   "wireit": {
-    "lint": {
-      "dependencies": [
-        "lint:eslint",
-        "lint:ts"
-      ]
-    },
-    "lint:eslint": {
-      "command": "eslint ./src",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": []
-    },
-    "lint:ts": {
-      "command": "tsc --noEmit",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": []
-    },
     "build": {
       "dependencies": [
         "build:js",
@@ -54,12 +31,12 @@
       ]
     },
     "build:js": {
-      "command": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./",
+      "command": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./dist",
       "files": [
         "./src/**/*.ts"
       ],
       "output": [
-        "./index.js{,.map}"
+        "./dist/index.js{,.map}"
       ]
     },
     "build:types": {
@@ -68,15 +45,8 @@
         "./src/**/*.ts"
       ],
       "output": [
-        "*.d.ts{,.map}"
+        "./dist/*.d.ts{,.map}"
       ]
-    },
-    "test": {
-      "command": "vitest run --coverage",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": []
     }
   },
   "repository": {

@@ -10,52 +10,40 @@ npm i @xlit/di
 
 ## Getting started
 
-Implement container
+Dependency injection container works for custom elements.
 
 ```js
-// container.js
-
 import { Container, instance, singleton } from '@xlit/di';
 
-const container = new Container()
+// provide value for key programmatically
+const container = Container.instance()
   .provide('foo', () => 'foo')
   .provide('bar', instance('bar'))
   .provide('baz', singleton(() => 'baz'));
 
+// lookup valie from container programmatically
 const foo = await container.lookup('foo');
 ```
 
+Use decorators to provide and lookup.
+
 ```js
-// x-app.js
+import { provide, lookup } from '@xlit/di';
 
-import { container } from './container.js';
+@provide()
+class FooService {
+  doFoo() [
+    // do foo
+  ]
+}
 
-@inject(container)
 class XApp extends HTMLElement {
-  @provide()
-  foox = 'foox';
+  @lookup()
+  fooService!: FooService;
 
-  @provide('barx')
-  _barx = 'barx';
-
-  @provide()
-  bazx = () => 'bazx';
+  doSomethingWithFooService() {
+    this.fooService.doFoo();
+  }
 }
 customElements.define('x-app', XApp);
-```
-
-Child elements can lookup and inject container data with `lookup` decorator
-
-```js
-import { container } from './container.js';
-
-@inject(container)
-class XChild extends HTMLElement {
-  @lookup()
-  foo: string;
-
-  @lookup('barx')
-  bar: string;
-}
-customElements.define('x-child', XChild);
 ```

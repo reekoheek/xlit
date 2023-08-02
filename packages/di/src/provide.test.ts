@@ -1,18 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { provide } from './provide.js';
-import { metadataOf } from './Metadata.js';
+import { Container } from './Container.js';
 
 describe('provide()', () => {
-  it('add provide entry to metadata', () => {
-    @provide()
+  it('provide as key', () => {
+    const container = new Container();
+
+    @provide({ container })
     class Component {
-      @provide()
-      foo = 'foo';
     }
 
-    const metadata = metadataOf(Component.prototype);
-
-    expect(metadata['provideClassEntry']?.to).toStrictEqual('component');
-    expect(metadata['provideEntries']?.length).toStrictEqual(1);
+    const component = container.lookup('component');
+    expect(component).instanceOf(Component);
   });
 });

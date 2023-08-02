@@ -1,10 +1,18 @@
-import { metadataOf } from './Metadata.js';
+import { Container } from './Container.js';
 
-export function lookup(name?: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (target: any, propName: string) => {
-    const from = name ?? propName;
-    const to = propName;
-    metadataOf(target).addLookupEntry({ from, to });
+interface LookupOptions {
+  key?: string;
+  container?: Container;
+}
+
+export function lookup<T>({ container = Container.instance(), key }: LookupOptions = {}) {
+  return (target: object, propertyKey: string) => {
+    const keyToLookup = key ?? propertyKey;
+
+    Object.defineProperty(target, propertyKey, {
+      get() {
+        return container.lookup<T>(keyToLookup);
+      },
+    });
   };
 }

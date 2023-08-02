@@ -1,18 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { lookup } from './lookup.js';
-import { metadataOf } from './Metadata.js';
+import { Container } from './Container.js';
 
 describe('lookup()', () => {
-  it('add lookup entry to metadata', () => {
+  it('define getter', () => {
+    const container = new Container().provide('foo', () => 'foo');
     class Component {
-      @lookup()
+      @lookup({ container })
       foo!: string;
-
-      @lookup()
-      bar!: string;
     }
-
-    const metadata = metadataOf(Component.prototype);
-    expect(metadata['lookupEntries'].length).toStrictEqual(2);
+    const component = new Component();
+    expect(component.foo).toStrictEqual('foo');
   });
 });

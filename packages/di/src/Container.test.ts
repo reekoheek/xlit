@@ -1,37 +1,46 @@
-import { describe, it, expect } from 'vitest';
-import { Container, instance } from './index.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { Container } from './Container.js';
 
 describe('Container', () => {
-  describe('constructor', () => {
-    it('create new container with configuration', () => {
-      const container = new Container()
-        .provide('bar', () => 'bar')
-        .provide('baz', () => 'baz');
+  beforeEach(() => {
+    Container.reset();
+  });
 
-      expect(Object.keys(container['fns'])).toMatchObject(['bar', 'baz']);
+  describe('.instance()', () => {
+    it('return singleton instance', () => {
+      const instance1 = Container.instance();
+      const instance2 = Container.instance();
+      expect(instance1).toStrictEqual(instance2);
     });
   });
 
   describe('#provide()', () => {
-    it('add provider', async() => {
+    it('add provider', () => {
       const container = new Container();
-      let hit = 0;
-      container.provide('obj', (c) => {
-        expect(c).toStrictEqual(container);
-        hit++;
-        return hit;
-      });
-      expect(await container.lookup('obj')).toStrictEqual(1);
-      expect(await container.lookup('obj')).toStrictEqual(2);
+      container.provide('foo', () => 'foo');
+      expect(Object.keys(container['fns'])).toMatchObject(['foo']);
+
+      expect(() => {
+        container.provide('foo', () => 'bar');
+      }).toThrowError(/already provided key/);
     });
   });
 
   describe('#lookup()', () => {
-    it('lookup instance', async() => {
-      const container = new Container()
-        .provide('foo', instance('foo'));
-      expect(await container.lookup('foo')).toStrictEqual('foo');
-      expect(async() => await container.lookup('bar')).rejects.toThrow(/provider not found to lookup "bar"/);
+    it('lookup with key', () => {
+      const container = new Container();
+      const hits: string[] = [];
+      container.provide('foo', () => {
+        hits.push('hit');
+        return 'foo';
+      });
+      const value = container.lookup('foo');
+      expect(value).toStrictEqual('foo');
+      expect(hits).toMatchObject(['hit']);
+
+      expect(() => {
+        container.lookup('bar');
+      }).toThrowError(/provider not found to lookup/);
     });
   });
 });

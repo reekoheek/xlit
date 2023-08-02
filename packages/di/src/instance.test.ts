@@ -1,10 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { instance } from './instance.js';
-import { Container } from './Container.js';
 
 describe('instance()', () => {
-  it('generate provider to instance', async() => {
+  it('generate provider to instance', () => {
     const fn = instance('foo');
-    expect(await fn(new Container())).toStrictEqual('foo');
+    expect(fn()).toStrictEqual('foo');
   });
 });

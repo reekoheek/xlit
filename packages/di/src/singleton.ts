@@ -1,9 +1,9 @@
 import { Provider } from './Container.js';
 
-export function singleton(fn: Provider): Provider {
-  let cache: Promise<NonNullable<unknown>> | NonNullable<unknown>;
-  return (c) => {
-    if (cache === undefined) cache = fn(c);
+export function singleton<T>(fn: Provider<T>): Provider<T> {
+  let cache: T;
+  return () => {
+    if (cache === undefined) cache = fn();
     return cache;
   };
 }

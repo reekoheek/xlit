@@ -1,7 +1,7 @@
-import { DIError } from './DIError.js';
+import { ContainerError } from './ContainerError.js';
 
 // eslint-disable-next-line no-use-before-define
-export type Provider = (c: Container) => Promise<NonNullable<unknown>> | NonNullable<unknown>;
+export type Provider<T> = () => T;
 
 export class Container {
   static instance() {
@@ -15,19 +15,26 @@ export class Container {
     instance = undefined;
   }
 
-  private fns: Record<string, Provider> = {};
+  private fns: Record<string, Provider<unknown>> = {};
 
-  provide(name: string, fn: Provider): this {
-    this.fns[name] = fn;
+  provide<T>(key: string, fn: Provider<T>): this {
+    if (this.provided(key)) {
+      throw new ContainerError(`already provided key "${key}"`);
+    }
+    this.fns[key] = fn;
     return this;
   }
 
-  lookup<T>(name: string): Promise<T> {
-    const fn = this.fns[name];
+  provided(key: string): boolean {
+    return Boolean(this.fns[key]);
+  }
+
+  lookup<T>(key: string): T {
+    const fn = this.fns[key];
     if (!fn) {
-      throw new DIError(`provider not found to lookup "${name}"`);
+      throw new ContainerError(`provider not found to lookup "${key}"`);
     }
-    return fn(this) as Promise<T>;
+    return fn() as T;
   }
 }
 

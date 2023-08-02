@@ -1,36 +1,26 @@
-import { Constructor, isConstructor } from './Constructor.js';
-import { DIError } from './DIError.js';
-import { Scope, metadataOf } from './Metadata.js';
+import { Container } from './Container.js';
+import { singleton } from './singleton.js';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T = object> = new (...args: any[]) => T;
+
+type Scope = 'singleton' | 'transient';
 
 interface ProvideOptions {
-  name?: string;
+  key?: string;
   scope?: Scope;
+  container?: Container;
 }
 
-export function provide(opts?: ProvideOptions) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (target: any, ctx?: unknown) => {
-    if (typeof ctx === 'object') throw new DIError('unimplemented new decorator spec');
+export function provide<T>({ container = Container.instance(), scope = 'singleton', key }: ProvideOptions = {}) {
+  return (TargetObject: Constructor<T>) => {
+    key = key ?? toKey(TargetObject.name);
 
-    if (isConstructor(target)) {
-      return decorateClass(target, opts);
-    }
-
-    return decorateClassMember(target, ctx as string, opts);
+    const fn = () => new TargetObject();
+    container.provide(key, scope === 'singleton' ? singleton(fn) : fn);
   };
 }
 
-function toContainerWiseName(name: string) {
-  return name[0].toLowerCase() + name.slice(1);
-}
-
-function decorateClass(Target: Constructor, { name, scope = 'singleton' }: ProvideOptions = {}) {
-  const to = name ?? toContainerWiseName(Target.name);
-  metadataOf(Target.prototype).setProvideClassEntry({ to, scope });
-}
-
-function decorateClassMember(target: object, propertyName: string, { name }: ProvideOptions = {}) {
-  const from = name ?? propertyName;
-  const to = propertyName;
-  metadataOf(target).addProvideEntry({ from, to });
+function toKey(s: string) {
+  return s[0].toLowerCase() + s.slice(1);
 }

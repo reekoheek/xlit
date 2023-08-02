@@ -1,5 +1,5 @@
 import { Provider } from './Container.js';
 
-export function instance(instance: unknown): Provider {
-  return () => Promise.resolve(instance);
+export function instance<T>(instance: T): Provider<T> {
+  return () => instance;
 }
