@@ -19,7 +19,7 @@ class FooCommand {
   kind = 'FooCommand';
 }
 
-@commandHandler(FooCommand)
+@commandHandler('FooCommand')
 class FooCommandHandler {
   handle(cmd: FooCommand): Promise<void> {
     // do something
@@ -36,11 +36,11 @@ class BarQuery {
   kind = 'BarQuery';
 }
 
-type BarResult = string;
+type BarDto = string;
 
-@queryHandler(BarQuery)
+@queryHandler('BarQuery')
 class BarQueryHandler {
-  handle(query: BarQuery): Promise<BarResult> {
+  handle(query: BarQuery): Promise<BarDto> {
     // do something
     return Promise.resolve('barbar');
   }

@@ -23,7 +23,7 @@ describe('Mediator', () => {
     it('put handler', async() => {
       const handler = () => Promise.resolve();
       const mediator = new Mediator();
-      mediator.put(Foo, handler);
+      mediator.put('Foo', handler);
       expect(await mediator['handlers'].get('Foo')).toStrictEqual(handler);
     });
   });
@@ -41,7 +41,7 @@ describe('Mediator', () => {
       await mediator.send(new Foo());
       expect(hits).toMatchObject(['hit:Foo']);
 
-      expect(async() => await mediator.send({ kind: 'Bar' })).rejects.toThrow(/handler not found: Bar/);
+      await expect(async() => await mediator.send({ kind: 'Bar' })).rejects.toThrow(/handler not found: Bar/);
     });
   });
 });

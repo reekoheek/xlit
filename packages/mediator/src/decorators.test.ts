@@ -11,7 +11,7 @@ describe('decorators', () => {
         readonly kind = 'Foo';
       }
 
-      @commandHandler(Foo, mediator)
+      @commandHandler('Foo', mediator)
       class FooHandler {
         static hits: string[] = [];
 
@@ -34,7 +34,7 @@ describe('decorators', () => {
         readonly kind = 'Foo';
       }
 
-      @queryHandler(Foo, mediator)
+      @queryHandler('Foo', mediator)
       class FooHandler {
         static hits: string[] = [];
 
