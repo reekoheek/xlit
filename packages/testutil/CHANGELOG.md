@@ -1,5 +1,11 @@
 # testutil
 
+## 2.4.1
+
+### Patch Changes
+
+- implement must resolve method of form schema
+
 ## 2.4.0
 
 ### Minor Changes
