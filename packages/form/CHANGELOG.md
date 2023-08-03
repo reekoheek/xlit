@@ -1,5 +1,40 @@
 # @xlit/form
 
+## 2.6.3
+
+### Patch Changes
+
+- fix schema and form
+- Updated dependencies
+  - @xlit/schema@2.6.3
+
+## 2.6.2
+
+### Patch Changes
+
+- fix(router): context state not accessible
+- Updated dependencies
+  - @xlit/schema@2.6.2
+
+## 2.6.1
+
+### Patch Changes
+
+- fix form main
+- Updated dependencies
+  - @xlit/schema@2.6.1
+
+## 2.6.0
+
+### Minor Changes
+
+- refactor
+
+### Patch Changes
+
+- Updated dependencies
+  - @xlit/schema@2.6.0
+
 ## 2.5.1
 
 ### Patch Changes

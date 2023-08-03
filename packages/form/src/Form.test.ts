@@ -55,11 +55,16 @@ describe('Form', () => {
         foo: new StringType().required(),
       }, () => undefined);
 
+      assert.deepStrictEqual(form.errors, {});
+      assert.deepStrictEqual(form.state, {});
+
       await form.setState({ foo: '' });
       assert.deepStrictEqual(form.errors, { foo: 'must be required' });
+      assert.deepStrictEqual(form.state, { foo: '' });
 
       await form.setState({ foo: 'foo' });
       assert.deepStrictEqual(form.errors, {});
+      assert.deepStrictEqual(form.state, { foo: 'foo' });
     });
   });
 

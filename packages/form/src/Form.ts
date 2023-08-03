@@ -12,10 +12,11 @@ type Errors<T extends ObjectShape> = identity<{ [key in Key<T>]?: string; }>;
 type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => unknown;
 
 export class Form<TShape extends ObjectShape> implements ReactiveController {
-  private schema: Schema<TShape>;
-  private _state: State<TShape> = {};
-  private _errors: Errors<TShape> = {};
-  private touches = new Set<Key<TShape>>();
+  private readonly schema: Schema<TShape>;
+  private readonly allKeys: Key<TShape>[];
+  private readonly touchedKeys = new Set<Key<TShape>>();
+  private readonly _state: State<TShape> = {};
+  private readonly _errors: Errors<TShape> = {};
 
   get state(): Readonly<State<TShape>> {
     return this._state;
@@ -30,7 +31,7 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
   }
 
   get allTouched(): boolean {
-    return this.touches.size === Object.keys(this.shape).length;
+    return this.touchedKeys.size === this.allKeys.length;
   }
 
   get ok(): boolean {
@@ -45,27 +46,34 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
     return this.state as Model<TShape>;
   }
 
-  constructor(private host: ReactiveControllerHost, private shape: TShape, private onSubmit: OnSubmitFn<TShape>) {
+  constructor(private host: ReactiveControllerHost, shape: TShape, private onSubmit: OnSubmitFn<TShape>) {
     this.host.addController(this);
     this.schema = new ObjectType(shape);
+    this.allKeys = Object.keys(shape);
   }
 
   hostConnected(): void {
     // noop
   }
 
-  async setState(state: State<TShape>): Promise<void> {
-    const partialKeys: Key<TShape>[] = Object.keys(state);
+  getAllowedKeys(state: State<TShape>): Key<TShape>[] {
+    const stateKeys: Key<TShape>[] = Object.keys(state);
+    return stateKeys.filter((key) => this.allKeys.includes(key));
+  }
 
-    partialKeys.forEach((key) => {
+  async setState(state: State<TShape>): Promise<void> {
+    const keys: Key<TShape>[] = this.getAllowedKeys(state);
+
+    keys.forEach((key) => {
       delete this._errors[key];
-      this.touches.add(key);
+      this._state[key] = state[key];
+      this.touchedKeys.add(key);
     });
 
     try {
-      const schema = this.schema.pick(partialKeys).required();
+      const schema = this.schema.pick(keys).required();
       const newState = await schema.resolve(state);
-      partialKeys.forEach((key) => {
+      keys.forEach((key) => {
         delete this._state[key];
         if (newState[key] !== undefined) {
           this._state[key] = newState[key];
@@ -77,7 +85,7 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
       }
 
       const childErrs = err.children;
-      partialKeys.forEach((key) => {
+      keys.forEach((key) => {
         const childErr = childErrs[key];
         if (childErr) {
           this._errors[key] = childErr.message;

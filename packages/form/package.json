@@ -1,15 +1,13 @@
 {
   "name": "@xlit/form",
-  "version": "2.5.1",
+  "version": "2.6.3",
   "description": "xlit form custom element",
   "type": "module",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "files": [
-    "/index.{js,js.map}",
-    "/*.{d.ts,d.ts.map}",
-    "/fields/"
+    "/dist"
   ],
   "scripts": {
     "prepublishOnly": "pnpm checkall",
