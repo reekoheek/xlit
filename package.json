@@ -10,7 +10,7 @@
     "test": "pnpm -r test",
     "changeset": "changeset",
     "build": "pnpm -r build",
-    "release": "pnpm build && pnpm changeset version && pnpm changeset publish"
+    "release": "pnpm changeset version && pnpm changeset publish"
   },
   "repository": {
     "type": "git",
