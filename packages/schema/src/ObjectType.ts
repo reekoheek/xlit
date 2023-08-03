@@ -56,7 +56,10 @@ export class ObjectType<TShape extends ObjectShape> extends BaseType<flatten<fix
 
   pick<K extends keyof TShape>(keys: K[]): ObjectType<Pick<TShape, K>> {
     const pickedShape = keys.reduce((acum, key: K) => {
-      acum[key] = this.shape[key];
+      const schema = this.shape[key];
+      if (schema) {
+        acum[key] = schema;
+      }
       return acum;
     }, {} as Pick<TShape, K>);
     return new ObjectType(pickedShape);
