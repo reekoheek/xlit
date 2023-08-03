@@ -4,10 +4,9 @@ export class Context<TState extends object> {
   readonly path: string;
   readonly query: Record<string, string> = {};
   readonly params: Record<string, string> = {};
+  readonly state: Partial<TState> = {};
 
   public result?: Element;
-
-  private state: Partial<TState> = {};
 
   constructor(readonly router: Router, path: string) {
     const url = new URL(path, 'http://localhost');
