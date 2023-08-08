@@ -36,7 +36,7 @@ npm i @xlit/router
 Write `index.js`:
 
 ```js
-import { Router, template, component } from '@xlit/router';
+import { Navigator, Router, template, component } from '@xlit/router';
 
 customElements.define('x-login', class Login extends HTMLElement {
   // ...
@@ -55,7 +55,7 @@ const router = new Router(document.getElementById('outlet'))
   // route with lazy loading component
   .route('/lazy', component('x-lazy', () => import('./lazy.js')));
 
-router.start();
+await Navigator.start(router);
 ```
 
 Write `lazy.js`:
@@ -64,6 +64,15 @@ Write `lazy.js`:
 customElements.define('x-lazy', class Lazy extends HTMLElement {
   // ...
 });
+```
+
+## Navigate
+
+```js
+Navigator.push('/foo');
+Navigator.replace('/foo');
+Navigator.pop();
+Navigator.go(1);
 ```
 
 ## Router Mode
@@ -75,13 +84,4 @@ Router mode can be configured from `mode` router options whether use push state
 const defaultRouter = new Router(outlet); // history
 const hashRouter = new Router(outlet, { mode: 'hash' }); // hash
 const historyRouter = new Router(outlet, { mode: 'history' }); // history
-```
-
-## Router Base Path
-
-Router can be configured to worked with sub directory in `history` mode by
-specifying `basePath` router options.
-
-```js
-const router = new Router(outlet, { basePath: '/subdir' });
 ```

@@ -4,11 +4,15 @@ export interface Outlet<TState extends object> {
   render(el: ContextedElement<TState>): Promise<void>;
 }
 
-export function isOutlet<TState extends object>(o: object): o is Outlet<TState> {
-  return 'render' in o;
+function isOutlet<TState extends object>(o?: object): o is Outlet<TState> {
+  return !!o && ('render' in o);
 }
 
-export class DefaultOutlet<TState extends object> {
+export function toOutlet<TState extends object>(arg: Outlet<TState> | Element): Outlet<TState> {
+  return isOutlet(arg) ? arg : new ElementOutlet(arg);
+}
+
+export class ElementOutlet<TState extends object> {
   constructor(private el: Element, private marker = document.createComment('marker')) {
     el.appendChild(this.marker);
   }

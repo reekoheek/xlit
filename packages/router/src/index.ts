@@ -1,4 +1,5 @@
 export * from './Router.js';
+export * from './Navigator.js';
 export * from './Middleware.js';
 export * from './RouterError.js';
 export * from './template.js';

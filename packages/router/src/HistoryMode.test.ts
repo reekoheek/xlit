@@ -1,17 +1,18 @@
 import { assert } from '@open-wc/testing';
 import { HistoryMode } from './HistoryMode.js';
+import { LocationInterface } from './types.js';
 
 describe('HistoryMode', () => {
   describe('#getContextPath()', () => {
     it('return context path from location', () => {
       const mode = new HistoryMode();
-      assert.strictEqual(mode.getContextPath({ pathname: '/', search: '' }), '/');
-      assert.strictEqual(mode.getContextPath({ pathname: '/foo', search: '' }), '/foo');
+      assert.strictEqual(mode.getContextPath(new MockLocation()), '/');
+      assert.strictEqual(mode.getContextPath(new MockLocation('/foo')), '/foo');
     });
 
     it('throw error if base path not match', () => {
       const mode = new HistoryMode('/foo');
-      assert.throws(() => mode.getContextPath({ pathname: '/bar', search: '' }), /invalid location/);
+      assert.throws(() => mode.getContextPath(new MockLocation('/bar')), /invalid location/);
     });
   });
 
@@ -29,3 +30,9 @@ describe('HistoryMode', () => {
     });
   });
 });
+
+class MockLocation implements LocationInterface {
+  constructor(readonly pathname: string = '/', readonly search: string = '', readonly hash: string = '') {
+
+  }
+}

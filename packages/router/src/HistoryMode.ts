@@ -1,11 +1,11 @@
-import { ModeInterface } from './types.js';
 import { RouterError } from './RouterError.js';
+import { LocationInterface, ModeInterface } from './types.js';
 
 export class HistoryMode implements ModeInterface {
   constructor(private basePath = '/') {
   }
 
-  getContextPath({ pathname, search }: { pathname: string, search: string }): string {
+  getContextPath({ pathname, search }: LocationInterface): string {
     const path = decodeURI(pathname + search);
     if (!path.startsWith(this.basePath)) {
       throw new RouterError('invalid location');

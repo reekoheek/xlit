@@ -1,7 +1,7 @@
 export interface LocationInterface {
-  readonly pathname: string,
-  readonly search: string,
-  readonly hash: string,
+  readonly pathname: string;
+  readonly search: string;
+  readonly hash: string;
 }
 
 export interface EventTargetInterface {
@@ -11,8 +11,8 @@ export interface EventTargetInterface {
 
 export interface HistoryInterface {
   go(delta: number): void;
-  pushState(data: unknown, unused: string, url: string): void;
-  replaceState(data: unknown, unused: string, url: string): void;
+  pushState(data: unknown, _: string, url: string): void;
+  replaceState(data: unknown, _: string, url: string): void;
 }
 
 export interface ModeInterface {
