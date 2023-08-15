@@ -1,5 +1,11 @@
 # testutil
 
+## 2.5.4
+
+### Patch Changes
+
+- refactor router
+
 ## 2.5.3
 
 ### Patch Changes

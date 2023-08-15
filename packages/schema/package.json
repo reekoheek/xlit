@@ -1,6 +1,6 @@
 {
   "name": "@xlit/schema",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "description": "xlit object schema validation",
   "type": "module",
   "main": "dist/index.js",

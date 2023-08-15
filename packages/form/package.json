@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "description": "xlit form custom element",
   "type": "module",
   "main": "dist/index.js",
@@ -29,6 +29,9 @@
     },
     "build:js": {
       "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist",
+      "dependencies": [
+        "../schema:build"
+      ],
       "files": [
         "./src/**/*.ts"
       ],
@@ -38,6 +41,9 @@
     },
     "build:types": {
       "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "dependencies": [
+        "../schema:build"
+      ],
       "files": [
         "./src/**/*.ts"
       ],
