@@ -11,40 +11,19 @@ type State<T extends ObjectShape> = Partial<Model<T>>;
 type Errors<T extends ObjectShape> = identity<{ [key in Key<T>]?: string; }>;
 type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => unknown;
 
-export class Form<TShape extends ObjectShape> implements ReactiveController {
+export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveController {
   private readonly schema: Schema<TShape>;
   private readonly allKeys: Key<TShape>[];
   private readonly touchedKeys = new Set<Key<TShape>>();
   private readonly _state: State<TShape> = {};
   private readonly _errors: Errors<TShape> = {};
 
-  get state(): Readonly<State<TShape>> {
-    return this._state;
-  }
-
-  get errors(): Readonly<Errors<TShape>> {
-    return this._errors;
-  }
-
-  get hasErrors(): boolean {
-    return Object.keys(this.errors).length !== 0;
-  }
-
-  get allTouched(): boolean {
-    return this.touchedKeys.size === this.allKeys.length;
-  }
-
-  get ok(): boolean {
-    return this.allTouched && !this.hasErrors;
-  }
-
-  get model(): Model<TShape> | undefined {
-    if (!this.ok) {
-      return undefined;
-    }
-
-    return this.state as Model<TShape>;
-  }
+  get state(): Readonly<State<TShape>> { return this._state; }
+  get errors(): Readonly<Errors<TShape>> { return this._errors; }
+  get hasErrors(): boolean { return Object.keys(this.errors).length !== 0; }
+  get allTouched(): boolean { return this.touchedKeys.size === this.allKeys.length; }
+  get ok(): boolean { return this.allTouched && !this.hasErrors; }
+  get model(): Model<TShape> | undefined { return this.ok ? this.state as Model<TShape> : undefined; }
 
   constructor(private host: ReactiveControllerHost, shape: TShape, private onSubmit: OnSubmitFn<TShape>) {
     this.host.addController(this);
@@ -56,13 +35,13 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
     // noop
   }
 
-  getAllowedKeys(state: State<TShape>): Key<TShape>[] {
-    const stateKeys: Key<TShape>[] = Object.keys(state);
-    return stateKeys.filter((key) => this.allKeys.includes(key));
+  protected allowedKeys(o: Record<string, unknown>): Key<TShape>[] {
+    const oKeys: Key<TShape>[] = Object.keys(o);
+    return oKeys.filter((key) => this.allKeys.includes(key));
   }
 
   async setState(state: State<TShape>): Promise<void> {
-    const keys: Key<TShape>[] = this.getAllowedKeys(state);
+    const keys: Key<TShape>[] = this.allowedKeys(state);
 
     keys.forEach((key) => {
       delete this._errors[key];
@@ -96,6 +75,16 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
     this.host.requestUpdate();
   }
 
+  setErrors(errors: Errors<TShape>): void {
+    const keys: Key<TShape>[] = this.allowedKeys(errors);
+
+    keys.forEach((key) => {
+      this._errors[key] = errors[key];
+    });
+
+    this.host.requestUpdate();
+  }
+
   bindInput(key: Key<TShape>): EventListener {
     return async(evt: Event) => {
       const value = (evt.target as HTMLInputElement).value;
@@ -107,11 +96,18 @@ export class Form<TShape extends ObjectShape> implements ReactiveController {
     return async(evt) => {
       evt.preventDefault();
 
+      const state: typeof this._state = { ...this.state };
+      this.allKeys.forEach((key) => {
+        if (state[key] === undefined) state[key] = undefined;
+      });
       await this.setState(this.state);
 
       const model = this.model;
       if (model) {
-        await this.onSubmit(model);
+        const result = this.onSubmit(model);
+        if (result instanceof Promise) {
+          await result;
+        }
       }
     };
   }
