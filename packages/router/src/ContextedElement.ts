@@ -9,3 +9,7 @@ export function toContextedElement<TState extends object>(el: Element, ctx: Cont
   contextedEl.ctx = ctx;
   return contextedEl;
 }
+
+export function isContextedElement(el: Element): el is ContextedElement<Record<string, unknown>> {
+  return 'ctx' in el;
+}

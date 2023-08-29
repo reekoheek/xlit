@@ -1,4 +1,4 @@
-import { Middleware } from './Middleware.js';
+import { Middleware } from '../Middleware.js';
 
 interface WithTitle {
   title: string;

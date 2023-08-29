@@ -1,5 +1,5 @@
-import { Context } from './Context.js';
-import { RouteFn } from './Route.js';
+import { Context } from '../Context.js';
+import { RouteFn } from '../Route.js';
 
 type ComponentLoadFn<TState extends object> = (ctx: Context<TState>) => Promise<unknown>;
 

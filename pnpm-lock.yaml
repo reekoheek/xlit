@@ -73,6 +73,8 @@ importers:
         specifier: ^2.7.6
         version: 2.7.6
 
+  packages/intl: {}
+
   packages/mediator: {}
 
   packages/router:

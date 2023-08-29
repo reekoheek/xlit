@@ -1,6 +1,6 @@
 import { assert, fixture, html } from '@open-wc/testing';
 import { title } from './title.js';
-import { Context } from './Context.js';
+import { Context } from '../Context.js';
 
 describe('title()', () => {
   it('set title', async() => {
