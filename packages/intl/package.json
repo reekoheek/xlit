@@ -1,0 +1,70 @@
+{
+  "name": "@xlit/intl",
+  "version": "2.6.4",
+  "description": "xlit internationalization",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "pnpm checkall",
+    "clean": "rm -rf .wireit coverage dist",
+    "checkall": "pnpm clean; pnpm lint && pnpm test && pnpm build",
+    "lint": "eslint ./src && tsc --noEmit",
+    "build": "wireit",
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest watch --coverage"
+  },
+  "wireit": {
+    "build": {
+      "dependencies": [
+        "build:js",
+        "build:types"
+      ],
+      "files": [
+        "./src/**/*.ts"
+      ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/index.js{,.map}"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/*.d.ts{,.map}"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "event",
+    "customelements",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}
