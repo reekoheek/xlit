@@ -2,7 +2,7 @@ import { Intl } from './Intl.js';
 import { IntlError } from './IntlError.js';
 
 interface Ctx<T> {
-  state: T;
+  state: Partial<T>;
 }
 type Next = () => Promise<void>;
 type Middleware<T> = (ctx: Ctx<T>, next: Next) => Promise<void>

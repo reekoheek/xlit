@@ -1,6 +1,6 @@
 {
   "name": "@xlit/mediator",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "description": "xlit command and query mediator",
   "type": "module",
   "main": "dist/index.js",

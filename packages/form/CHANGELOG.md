@@ -1,5 +1,13 @@
 # @xlit/form
 
+## 2.6.8
+
+### Patch Changes
+
+- fix intl types bug
+- Updated dependencies
+  - @xlit/schema@2.6.8
+
 ## 2.6.7
 
 ### Patch Changes

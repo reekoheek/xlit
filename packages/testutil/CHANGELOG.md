@@ -1,5 +1,11 @@
 # testutil
 
+## 2.5.8
+
+### Patch Changes
+
+- fix intl types bug
+
 ## 2.5.7
 
 ### Patch Changes

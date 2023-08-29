@@ -1,6 +1,6 @@
 {
   "name": "@xlit/router",
-  "version": "2.6.7",
+  "version": "2.6.8",
   "description": "xlit router",
   "type": "module",
   "main": "dist/index.js",
