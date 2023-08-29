@@ -12,6 +12,10 @@ describe('BooleanType', () => {
       expect(await schema.resolve('false')).toStrictEqual(false);
       expect(await schema.resolve(true)).toStrictEqual(true);
       expect(await schema.resolve(false)).toStrictEqual(false);
+      expect(await schema.resolve(0)).toStrictEqual(false);
+      expect(await schema.resolve(1)).toStrictEqual(true);
+      expect(await schema.resolve(-1)).toStrictEqual(true);
+      expect(await schema.resolve(99)).toStrictEqual(true);
 
       await expect(async() => await schema.resolve({})).rejects.toThrowError(/invalid boolean/);
     });

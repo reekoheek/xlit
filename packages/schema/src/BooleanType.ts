@@ -11,6 +11,10 @@ export class BooleanType extends BaseType<boolean | undefined> {
       return value;
     }
 
+    if (typeof value === 'number') {
+      return Boolean(value);
+    }
+
     if (value === 'true') {
       return true;
     }
