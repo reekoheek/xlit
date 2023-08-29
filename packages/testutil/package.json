@@ -1,7 +1,7 @@
 {
   "name": "testutil",
   "private": true,
-  "version": "2.5.4",
+  "version": "2.5.7",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

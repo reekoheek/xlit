@@ -1,5 +1,23 @@
 # testutil
 
+## 2.5.7
+
+### Patch Changes
+
+- version sync attempt 2
+
+## 2.5.6
+
+### Patch Changes
+
+- make all version sync
+
+## 2.5.5
+
+### Patch Changes
+
+- introduce intl
+
 ## 2.5.4
 
 ### Patch Changes

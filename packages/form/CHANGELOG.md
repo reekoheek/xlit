@@ -1,5 +1,29 @@
 # @xlit/form
 
+## 2.6.7
+
+### Patch Changes
+
+- version sync attempt 2
+- Updated dependencies
+  - @xlit/schema@2.6.7
+
+## 2.6.6
+
+### Patch Changes
+
+- make all version sync
+- Updated dependencies
+  - @xlit/schema@2.6.6
+
+## 2.6.5
+
+### Patch Changes
+
+- introduce intl
+- Updated dependencies
+  - @xlit/schema@2.6.5
+
 ## 2.6.4
 
 ### Patch Changes

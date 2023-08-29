@@ -1,6 +1,6 @@
 {
   "name": "@xlit/di",
-  "version": "2.6.4",
+  "version": "2.6.7",
   "description": "xlit dependency injection container",
   "type": "module",
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
   "scripts": {
     "prepublishOnly": "pnpm checkall",
     "clean": "rm -rf .wireit coverage dist",
-    "checkall": "pnpm clean; pnpm lint && pnpm test && pnpm build",
+    "checkall": "pnpm lint && pnpm test && pnpm build",
     "lint": "eslint ./src && tsc --noEmit",
     "build": "wireit",
     "build:js": "wireit",

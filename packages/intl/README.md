@@ -1,40 +1,23 @@
-# @xlit/event
+# @xlit/intl
 
-Work with events
+Work with internationalization
 
 ## Installation
 
 ```sh
-npm i @xlit/event
+npm i @xlit/intl
 ```
 
 ## Getting started
 
 ```typescript
-import { MemoryEventBus, select } from '@xlit/event';
+import { Intl } from '@xlit/intl';
 
-class Event1 {
-  kind = 'Event1';
-}
+const SUPPORTED_LOCALES = ['id', 'en'];
+const BROWSER_SUPPORTED_LANGUAGES = [...navigator.languages];
 
-class Event2 {
-  kind = 'Event2';
-}
-
-const bus = new MemoryEventBus();
-
-bus.addHandler((evt) => {
-  // handle all events
-});
-
-bus.addHandler(select('Event1', (evt: Event1) => {
-  // handle only Event1 events
+const intl = await Intl.fromLocales(BROWSER_SUPPORTED_LANGUAGES, SUPPORTED_LOCALES, multiDictionaryResolver({
+  id: () => import('./locales/id.js'),
+  en: () => import('./locales/en.js'),
 }));
-
-bus.addHandler(select('Event2', (evt: Event2) => {
-  // handle only Event2 events
-}));
-
-bus.dispatchEvent(new Event1());
-bus.dispatchEvent(new Event2());
 ```
