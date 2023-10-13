@@ -45,8 +45,8 @@ class RequiredType<TBase extends Type<unknown>> extends BaseType<NonNullable<TBa
   }
 
   protected async cast(value: unknown): Promise<NonNullable<TBase['_outputType']>> {
-    const result = await this.baseType.resolve(value);
-    if (!result) {
+    const result = await this.baseType.resolve(value) ?? undefined;
+    if (result === undefined) {
       throw new SchemaError(this.message);
     }
     return result;

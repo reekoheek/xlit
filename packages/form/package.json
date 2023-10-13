@@ -1,6 +1,6 @@
 {
   "name": "@xlit/form",
-  "version": "2.6.8",
+  "version": "2.6.12",
   "description": "xlit form custom element",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +13,7 @@
     "prepublishOnly": "pnpm checkall",
     "clean": "rm -rf .wireit coverage dist",
     "checkall": "pnpm lint && pnpm test && pnpm build",
-    "lint": "eslint ./src && tsc --noEmit",
+    "lint": "wireit",
     "build": "wireit",
     "build:js": "wireit",
     "build:types": "wireit",
@@ -21,6 +21,12 @@
     "test:watch": "wtr --watch"
   },
   "wireit": {
+    "lint": {
+      "command": "eslint ./src && tsc --noEmit",
+      "dependencies": [
+        "../schema:build"
+      ]
+    },
     "build": {
       "dependencies": [
         "build:js",
@@ -53,6 +59,9 @@
     },
     "test": {
       "command": "wtr",
+      "dependencies": [
+        "../schema:build"
+      ],
       "files": [
         "./src/**/*.ts"
       ],
@@ -79,6 +88,6 @@
   },
   "dependencies": {
     "@xlit/schema": "workspace:*",
-    "lit": "^2.7.6"
+    "lit": "^3.0.0"
   }
 }

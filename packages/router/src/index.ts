@@ -11,3 +11,6 @@ export * from './middlewares/notFound.js';
 export * from './routes/template.js';
 export * from './routes/component.js';
 export * from './decorators/context.js';
+export * from './decorators/contextParam.js';
+export * from './decorators/contextState.js';
+export * from './decorators/contextQuery.js';

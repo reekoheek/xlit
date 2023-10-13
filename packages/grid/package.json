@@ -1,6 +1,6 @@
 {
   "name": "@xlit/grid",
-  "version": "2.6.8",
+  "version": "2.6.12",
   "description": "xlit draggable grid layout custom element",
   "type": "module",
   "main": "dist/index.js",
@@ -76,6 +76,6 @@
     "access": "public"
   },
   "dependencies": {
-    "lit": "^2.7.6"
+    "lit": "^3.0.0"
   }
 }

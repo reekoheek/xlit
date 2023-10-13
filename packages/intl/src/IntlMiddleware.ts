@@ -1,11 +1,13 @@
 import { Intl } from './Intl.js';
 import { IntlError } from './IntlError.js';
 
-interface Ctx<T> {
-  state: Partial<T>;
+interface Context {
+  state: {
+    intl?: Intl;
+  },
 }
+
 type Next = () => Promise<void>;
-type Middleware<T> = (ctx: Ctx<T>, next: Next) => Promise<void>
 
 export interface IntlState {
   intl: Intl;
@@ -20,11 +22,11 @@ export class IntlMiddleware {
     this.intl = intl;
   }
 
-  middleware(): Middleware<IntlState> {
+  middleware() {
     const htmlEl = document.querySelector('html') as HTMLElement;
     htmlEl.lang = this.intl.locale;
 
-    return async(ctx, next) => {
+    return async(ctx: Context, next: Next) => {
       if (ctx.state.intl) {
         throw new IntlError('intl already initialized');
       }

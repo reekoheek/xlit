@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import '../index.js';
 import './index.css';
+import { customElement } from 'lit/decorators.js';
 
 interface Item {
   label: string;
@@ -15,6 +16,7 @@ function random(start: number, end: number): number {
   return Math.floor(Math.random() * seed) + start;
 }
 
+@customElement('x-app')
 export class App extends LitElement {
   nextLabel = 0;
   items: Item[] = [];
@@ -65,8 +67,7 @@ export class App extends LitElement {
     };
   }
 
-  protected createRenderRoot(): Element | ShadowRoot {
+  protected createRenderRoot() {
     return this;
   }
 }
-customElements.define('x-app', App);

@@ -1,5 +1,29 @@
 # @xlit/form
 
+## 2.6.12
+
+### Patch Changes
+
+- update deps
+
+## 2.6.11
+
+### Patch Changes
+
+- fix types
+
+## 2.6.10
+
+### Patch Changes
+
+- fix types
+
+## 2.6.9
+
+### Patch Changes
+
+- fix types
+
 ## 2.6.8
 
 ### Patch Changes

@@ -1,5 +1,37 @@
 # @xlit/form
 
+## 2.6.12
+
+### Patch Changes
+
+- update deps
+- Updated dependencies
+  - @xlit/schema@2.6.12
+
+## 2.6.11
+
+### Patch Changes
+
+- fix types
+- Updated dependencies
+  - @xlit/schema@2.6.11
+
+## 2.6.10
+
+### Patch Changes
+
+- fix types
+- Updated dependencies
+  - @xlit/schema@2.6.10
+
+## 2.6.9
+
+### Patch Changes
+
+- fix types
+- Updated dependencies
+  - @xlit/schema@2.6.9
+
 ## 2.6.8
 
 ### Patch Changes

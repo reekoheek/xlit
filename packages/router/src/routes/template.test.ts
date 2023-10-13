@@ -1,6 +1,6 @@
 import { assert, fixture, html } from '@open-wc/testing';
 import { template } from './template.js';
-import { assertRejects } from 'testutil';
+import { assertRejects } from '../test/assertRejects.js';
 
 describe('template()', () => {
   it('return element if invoked', async() => {

@@ -4,7 +4,7 @@ import { ElementOutlet, Outlet } from './Outlet.js';
 import { HistoryMode } from './HistoryMode.js';
 import { Dispatcher } from './Dispatcher.js';
 import { Context } from './Context.js';
-import { assertRejects } from 'testutil';
+import { assertRejects } from './test/assertRejects.js';
 
 describe('Navigator', () => {
   beforeEach(async() => {
