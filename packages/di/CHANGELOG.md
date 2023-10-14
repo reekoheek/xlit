@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.6.13
+
+### Patch Changes
+
+- simplify intl
+
 ## 2.6.12
 
 ### Patch Changes

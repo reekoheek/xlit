@@ -1,5 +1,13 @@
 # @xlit/form
 
+## 2.6.13
+
+### Patch Changes
+
+- simplify intl
+- Updated dependencies
+  - @xlit/schema@2.6.13
+
 ## 2.6.12
 
 ### Patch Changes
