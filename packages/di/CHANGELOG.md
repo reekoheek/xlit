@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.6.14
+
+### Patch Changes
+
+- router navigation will halt old context
+
 ## 2.6.13
 
 ### Patch Changes

@@ -25,17 +25,17 @@
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
     "@open-wc/testing": "^3.2.0",
-    "@types/mocha": "^10.0.2",
+    "@types/mocha": "^10.0.3",
     "@vitest/coverage-v8": "^0.34.6",
-    "@web/dev-server-esbuild": "^0.4.1",
+    "@web/dev-server-esbuild": "^0.4.2",
     "@web/test-runner": "^0.17.2",
-    "esbuild": "^0.19.4",
+    "esbuild": "^0.19.5",
     "esbuild-register": "^3.5.0",
     "eslint-config-xinix": "^2.0.1",
     "jsdom": "^22.1.0",
     "lit": "^3.0.0",
     "typescript": "^5.2.2",
-    "vite": "^4.4.11",
+    "vite": "^4.5.0",
     "vitest": "^0.34.6",
     "wireit": "^0.14.0"
   }

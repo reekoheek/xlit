@@ -1,5 +1,13 @@
 # @xlit/form
 
+## 2.6.14
+
+### Patch Changes
+
+- router navigation will halt old context
+- Updated dependencies
+  - @xlit/schema@2.6.14
+
 ## 2.6.13
 
 ### Patch Changes

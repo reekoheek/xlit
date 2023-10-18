@@ -8,6 +8,7 @@ export * from './HashMode.js';
 export * from './HistoryMode.js';
 export * from './middlewares/title.js';
 export * from './middlewares/notFound.js';
+export * from './middlewares/layout.js';
 export * from './routes/template.js';
 export * from './routes/component.js';
 export * from './decorators/context.js';

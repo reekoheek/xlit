@@ -5,6 +5,7 @@ export class Context<TState extends object> {
   readonly params: Record<string, string> = {};
   readonly state: Partial<TState> = {};
 
+  public halted = false;
   public result?: Element;
 
   constructor(path: string) {

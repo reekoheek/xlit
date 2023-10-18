@@ -138,6 +138,10 @@ export class Navigator<TState extends object> {
       return;
     }
 
+    if (this.currentCtx) {
+      this.currentCtx.halted = true;
+    }
+
     await this._dispatching;
     this._dispatching = resolvable();
 
@@ -145,6 +149,10 @@ export class Navigator<TState extends object> {
 
     try {
       await this.dispatcher.dispatch(ctx);
+
+      if (ctx.halted) {
+        return;
+      }
 
       if (!ctx.result) {
         throw new RouterError('no result route');
