@@ -1,5 +1,16 @@
 # @xlit/form
 
+## 2.7.0
+
+### Minor Changes
+
+- add modules
+
+### Patch Changes
+
+- Updated dependencies
+  - @xlit/schema@2.7.0
+
 ## 2.6.14
 
 ### Patch Changes

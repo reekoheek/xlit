@@ -1,6 +1,6 @@
 {
   "name": "@xlit/router",
-  "version": "2.6.14",
+  "version": "2.7.0",
   "description": "xlit router",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +13,7 @@
     "prepublishOnly": "pnpm checkall",
     "clean": "rm -rf .wireit coverage dist",
     "checkall": "pnpm lint && pnpm test && pnpm build",
-    "lint": "eslint ./src && tsc --noEmit",
+    "lint": "wireit",
     "build": "wireit",
     "build:js": "wireit",
     "build:types": "wireit",
@@ -21,6 +21,13 @@
     "test:watch": "wtr --watch"
   },
   "wireit": {
+    "lint": {
+      "command": "eslint ./src && tsc --noEmit",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
     "build": {
       "dependencies": [
         "build:js",
@@ -50,7 +57,9 @@
       "files": [
         "./src/**/*.ts"
       ],
-      "output": []
+      "output": [
+        "./coverage/**"
+      ]
     }
   },
   "repository": {

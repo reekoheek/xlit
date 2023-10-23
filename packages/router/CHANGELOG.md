@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.7.0
+
+### Minor Changes
+
+- add modules
+
 ## 2.6.14
 
 ### Patch Changes

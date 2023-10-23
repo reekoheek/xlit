@@ -2,7 +2,6 @@ import { Context } from './Context.js';
 import { Dispatcher } from './Dispatcher.js';
 import { Middleware } from './Middleware.js';
 import { Route, RouteFn } from './Route.js';
-import { RouterError } from './RouterError.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class Router<TState extends object = any> implements Dispatcher<TState> {

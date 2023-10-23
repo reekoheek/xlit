@@ -1,6 +1,6 @@
 {
   "name": "@xlit/schema",
-  "version": "2.6.14",
+  "version": "2.7.0",
   "description": "xlit object schema validation",
   "type": "module",
   "main": "dist/index.js",
@@ -13,14 +13,21 @@
     "prepublishOnly": "pnpm checkall",
     "clean": "rm -rf .wireit coverage dist",
     "checkall": "pnpm lint && pnpm test && pnpm build",
-    "lint": "eslint ./src && tsc --noEmit",
+    "lint": "wireit",
     "build": "wireit",
     "build:js": "wireit",
     "build:types": "wireit",
-    "test": "vitest run --coverage",
+    "test": "wireit",
     "test:watch": "vitest watch --coverage"
   },
   "wireit": {
+    "lint": {
+      "command": "eslint ./src && tsc --noEmit",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
     "build": {
       "dependencies": [
         "build:js",
@@ -46,6 +53,15 @@
       ],
       "output": [
         "*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "vitest run --coverage",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./coverage/**"
       ]
     }
   },

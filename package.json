@@ -4,12 +4,7 @@
   "private": true,
   "description": "",
   "scripts": {
-    "clean": "pnpm -r clean",
-    "checkall": "pnpm -r checkall",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test",
     "changeset": "changeset",
-    "build": "pnpm -r build",
     "release": "pnpm changeset version && pnpm changeset publish"
   },
   "repository": {
@@ -27,7 +22,7 @@
     "@open-wc/testing": "^3.2.0",
     "@types/mocha": "^10.0.3",
     "@vitest/coverage-v8": "^0.34.6",
-    "@web/dev-server-esbuild": "^0.4.2",
+    "@web/dev-server-esbuild": "^0.4.3",
     "@web/test-runner": "^0.17.2",
     "esbuild": "^0.19.5",
     "esbuild-register": "^3.5.0",
@@ -37,6 +32,6 @@
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vitest": "^0.34.6",
-    "wireit": "^0.14.0"
+    "wireit": "^0.14.1"
   }
 }
