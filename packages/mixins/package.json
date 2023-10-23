@@ -1,0 +1,86 @@
+{
+  "name": "@xlit/mixins",
+  "version": "2.7.0",
+  "description": "xlit common mixins",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "pnpm checkall",
+    "clean": "rm -rf .wireit coverage dist",
+    "checkall": "pnpm lint && pnpm test && pnpm build",
+    "lint": "wireit",
+    "build": "wireit",
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "wireit",
+    "test:watch": "wtr --watch"
+  },
+  "wireit": {
+    "lint": {
+      "command": "eslint ./src && tsc --noEmit",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
+    "build": {
+      "dependencies": [
+        "build:js",
+        "build:types"
+      ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/index.js{,.map}"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "wtr",
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./coverage/**"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "form",
+    "customelements",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "lit": "^3.0.0"
+  }
+}
