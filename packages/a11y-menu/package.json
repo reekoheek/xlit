@@ -1,0 +1,99 @@
+{
+  "name": "@xlit/a11y-menu",
+  "version": "2.7.0",
+  "description": "xlit a11y menu componentb",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "prepublishOnly": "pnpm checkall",
+    "clean": "rm -rf .wireit coverage dist",
+    "checkall": "pnpm lint && pnpm test && pnpm build",
+    "lint": "wireit",
+    "build": "wireit",
+    "build:js": "wireit",
+    "build:types": "wireit",
+    "test": "wireit",
+    "test:watch": "wtr --watch"
+  },
+  "wireit": {
+    "lint": {
+      "command": "eslint ./src && tsc --noEmit",
+      "dependencies": [
+        "../router:build"
+      ],
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": []
+    },
+    "build": {
+      "dependencies": [
+        "build:js",
+        "build:types"
+      ]
+    },
+    "build:js": {
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist",
+      "dependencies": [
+        "../router:build"
+      ],
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/index.js{,.map}"
+      ]
+    },
+    "build:types": {
+      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "dependencies": [
+        "../router:build"
+      ],
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./dist/*.d.ts{,.map}"
+      ]
+    },
+    "test": {
+      "command": "wtr",
+      "dependencies": [
+        "../router:build"
+      ],
+      "files": [
+        "./src/**/*.ts"
+      ],
+      "output": [
+        "./coverage/**"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reekoheek/xlit.git"
+  },
+  "keywords": [
+    "form",
+    "customelements",
+    "webcomponents"
+  ],
+  "author": "Ganesha <reekoheek@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/reekoheek/xlit/issues"
+  },
+  "homepage": "https://github.com/reekoheek/xlit#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@xlit/router": "workspace:*",
+    "lit": "^3.0.0"
+  }
+}
