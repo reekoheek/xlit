@@ -1,6 +1,6 @@
 {
   "name": "@xlit/intl",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "xlit internationalization",
   "type": "module",
   "main": "dist/index.js",

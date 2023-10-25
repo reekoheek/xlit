@@ -1,4 +1,4 @@
-import { NestedSchemaError, ObjectShape, ObjectType } from '@xlit/schema';
+import { ObjectShape, ObjectType, SchemaError } from '@xlit/schema';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { DirectiveResult } from 'lit/directive.js';
 import { BindFieldDirective, FieldChangeEventName, bindFieldDirective } from './bindFieldDirective.js';
@@ -62,7 +62,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
         }
       });
     } catch (err) {
-      if (!(err instanceof NestedSchemaError)) {
+      if (!(err instanceof SchemaError)) {
         throw err;
       }
 

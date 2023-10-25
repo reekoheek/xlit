@@ -39,7 +39,7 @@ export abstract class BaseType<T> implements Type<T> {
 }
 
 class RequiredType<TBase extends Type<unknown>> extends BaseType<NonNullable<TBase['_outputType']>> {
-  constructor(private baseType: TBase, private message = 'must be required') {
+  constructor(readonly baseType: TBase, private message = 'must be required') {
     super();
   }
 

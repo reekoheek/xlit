@@ -1,5 +1,13 @@
 # @xlit/form
 
+## 2.7.2
+
+### Patch Changes
+
+- refactor error
+- Updated dependencies
+  - @xlit/router@2.7.2
+
 ## 2.7.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.7.2
+
+### Patch Changes
+
+- refactor error
+
 ## 2.7.1
 
 ### Patch Changes
