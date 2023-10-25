@@ -1,6 +1,5 @@
 import { BaseType } from './BaseType.js';
 import { SchemaError } from './SchemaError.js';
-import { NestedSchemaError } from './NestedSchemaError.js';
 import { Type } from './Type.js';
 
 export class ArrayType<T> extends BaseType<T[] | undefined> {
@@ -14,10 +13,10 @@ export class ArrayType<T> extends BaseType<T[] | undefined> {
     }
 
     if (!(value instanceof Array)) {
-      throw new SchemaError('invalid array');
+      throw new Error('invalid array');
     }
 
-    const resultErr = new NestedSchemaError('invalid array');
+    const resultErr = new SchemaError('invalid array');
 
     const result = await Promise.all(value.map(async(item, index) => {
       try {

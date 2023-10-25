@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ArrayType } from './ArrayType.js';
 import { StringType } from './StringType.js';
-import { NestedSchemaError } from './NestedSchemaError.js';
+import { SchemaError } from './SchemaError.js';
 
 describe('ArrayType', () => {
   describe('#cast()', () => {
@@ -11,7 +11,7 @@ describe('ArrayType', () => {
       expect(await schema.resolve(['foo', 'bar'])).toEqual(['foo', 'bar']);
 
       await expect(async() => await schema.resolve(99)).rejects.toThrowError(/invalid array/);
-      await expect(async() => await schema.resolve(['foo', 1])).rejects.toThrowError(NestedSchemaError);
+      await expect(async() => await schema.resolve(['foo', 1])).rejects.toThrowError(SchemaError);
     });
   });
 });

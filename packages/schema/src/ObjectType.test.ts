@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ObjectType } from './ObjectType.js';
 import { StringType } from './StringType.js';
-import { NestedSchemaError } from './NestedSchemaError.js';
+import { SchemaError } from './SchemaError.js';
 
 const schema = new ObjectType({
   foo: new StringType().required(),
@@ -26,7 +26,7 @@ describe('ObjectType', () => {
         await schema.resolve({});
         throw new Error('unexpected');
       } catch (err) {
-        if (!(err instanceof NestedSchemaError)) {
+        if (!(err instanceof SchemaError)) {
           throw err;
         }
         expect(Object.keys(err.children)).toMatchObject(['foo']);

@@ -1,5 +1,4 @@
 export * from './SchemaError.js';
-export * from './NestedSchemaError.js';
 export * from './Type.js';
 export * from './BaseType.js';
 export * from './BooleanType.js';

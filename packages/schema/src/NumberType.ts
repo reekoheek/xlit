@@ -1,5 +1,4 @@
 import { BaseType } from './BaseType.js';
-import { SchemaError } from './SchemaError.js';
 
 export class NumberType extends BaseType<number | undefined> {
   protected cast(value: unknown): number | undefined {
@@ -18,7 +17,7 @@ export class NumberType extends BaseType<number | undefined> {
       }
     }
 
-    throw new SchemaError('invalid number');
+    throw new Error('invalid number');
   }
 
   gte(num: number, message?: string) {
@@ -31,7 +30,7 @@ export class NumberType extends BaseType<number | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? `must be greater than or equal to ${num}`);
+      throw new Error(message ?? `must be greater than or equal to ${num}`);
     });
   }
 
@@ -45,7 +44,7 @@ export class NumberType extends BaseType<number | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? `must be greater than ${num}`);
+      throw new Error(message ?? `must be greater than ${num}`);
     });
   }
 
@@ -59,7 +58,7 @@ export class NumberType extends BaseType<number | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? `must be lower than or equal to ${num}`);
+      throw new Error(message ?? `must be lower than or equal to ${num}`);
     });
   }
 
@@ -73,7 +72,7 @@ export class NumberType extends BaseType<number | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? `must be lower than ${num}`);
+      throw new Error(message ?? `must be lower than ${num}`);
     });
   }
 }

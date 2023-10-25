@@ -1,5 +1,4 @@
 import { BaseType } from './BaseType.js';
-import { SchemaError } from './SchemaError.js';
 
 export class DateType extends BaseType<Date | undefined> {
   protected cast(value: unknown) {
@@ -12,7 +11,7 @@ export class DateType extends BaseType<Date | undefined> {
       if (!isNaN(dateValue.getTime())) {
         return dateValue;
       }
-      throw new SchemaError('invalid date');
+      throw new Error('invalid date');
     }
 
     if (typeof value === 'number') {
@@ -20,14 +19,14 @@ export class DateType extends BaseType<Date | undefined> {
       if (!isNaN(dateValue.getTime())) {
         return dateValue;
       }
-      throw new SchemaError('invalid date');
+      throw new Error('invalid date');
     }
 
     if (value instanceof Date) {
       return value;
     }
 
-    throw new SchemaError('invalid date');
+    throw new Error('invalid date');
   }
 
   gte(dt: Date, message?: string) {
@@ -40,7 +39,7 @@ export class DateType extends BaseType<Date | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? 'must be greater than or equal specified date');
+      throw new Error(message ?? 'must be greater than or equal specified date');
     });
   }
 
@@ -54,7 +53,7 @@ export class DateType extends BaseType<Date | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? 'must be greater than specified date');
+      throw new Error(message ?? 'must be greater than specified date');
     });
   }
 
@@ -68,7 +67,7 @@ export class DateType extends BaseType<Date | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? 'must be lower than or equal specified date');
+      throw new Error(message ?? 'must be lower than or equal specified date');
     });
   }
 
@@ -82,7 +81,7 @@ export class DateType extends BaseType<Date | undefined> {
         return value;
       }
 
-      throw new SchemaError(message ?? 'must be lower than specified date');
+      throw new Error(message ?? 'must be lower than specified date');
     });
   }
 }

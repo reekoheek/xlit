@@ -1,5 +1,4 @@
 import { BaseType } from './BaseType.js';
-import { SchemaError } from './SchemaError.js';
 
 export class StringType extends BaseType<string | undefined> {
   protected cast(value: unknown) {
@@ -8,7 +7,7 @@ export class StringType extends BaseType<string | undefined> {
     }
 
     if (typeof value !== 'string') {
-      throw new SchemaError('invalid string');
+      throw new Error('invalid string');
     }
 
     if (value === '') {
@@ -35,7 +34,7 @@ export class StringType extends BaseType<string | undefined> {
       }
 
       if (value.length < minLen) {
-        throw new SchemaError(message ?? `minimum length must be ${minLen}`);
+        throw new Error(message ?? `minimum length must be ${minLen}`);
       }
 
       return value;
@@ -49,7 +48,7 @@ export class StringType extends BaseType<string | undefined> {
       }
 
       if (value.length > maxLen) {
-        throw new SchemaError(message ?? `maximum length must be ${maxLen}`);
+        throw new Error(message ?? `maximum length must be ${maxLen}`);
       }
 
       return value;
@@ -63,7 +62,7 @@ export class StringType extends BaseType<string | undefined> {
       }
 
       if (!value.match(re)) {
-        throw new SchemaError(message);
+        throw new Error(message);
       }
 
       return value;

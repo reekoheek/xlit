@@ -1,5 +1,4 @@
 import { Directive, ElementPart, PartInfo, PartType, directive } from 'lit/directive.js';
-import { FormError } from './FormError.js';
 import { Form } from './Form.js';
 import { noChange } from 'lit';
 import { ObjectShape } from '@xlit/schema';
@@ -18,7 +17,7 @@ export class BindFieldDirective extends Directive {
     super(partInfo);
 
     if (partInfo.type !== PartType.ELEMENT) {
-      throw new FormError('bind directive must be used in element');
+      throw new Error('bind directive must be used in element');
     }
   }
 

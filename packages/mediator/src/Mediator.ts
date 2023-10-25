@@ -1,4 +1,3 @@
-import { MediatorError } from './MediatorError.js';
 import { Request } from './Request.js';
 import { RequestHandler } from './RequestHandler.js';
 
@@ -28,7 +27,7 @@ export class Mediator {
       return handler as RequestHandler<TRequest, TResult>;
     }
 
-    throw new MediatorError('handler not found: ' + req.kind);
+    throw new Error('handler not found: ' + req.kind);
   }
 
   put<TRequest extends Request, TResult>(kind: string, handler: RequestHandler<TRequest, TResult>): this {

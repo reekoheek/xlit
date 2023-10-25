@@ -1,5 +1,4 @@
 import { BaseType } from './BaseType.js';
-import { SchemaError } from './SchemaError.js';
 
 export class BooleanType extends BaseType<boolean | undefined> {
   protected cast(value: unknown) {
@@ -23,6 +22,6 @@ export class BooleanType extends BaseType<boolean | undefined> {
       return false;
     }
 
-    throw new SchemaError('invalid boolean');
+    throw new Error('invalid boolean');
   }
 }

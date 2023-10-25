@@ -1,5 +1,3 @@
-import { ContainerError } from './ContainerError.js';
-
 // eslint-disable-next-line no-use-before-define
 export type Provider<T> = () => T;
 
@@ -19,7 +17,7 @@ export class Container {
 
   provide<T>(key: string, fn: Provider<T>): this {
     if (this.provided(key)) {
-      throw new ContainerError(`already provided key "${key}"`);
+      throw new Error(`already provided key "${key}"`);
     }
     this.fns[key] = fn;
     return this;
@@ -32,7 +30,7 @@ export class Container {
   lookup<T>(key: string): T {
     const fn = this.fns[key];
     if (!fn) {
-      throw new ContainerError(`provider not found to lookup "${key}"`);
+      throw new Error(`provider not found to lookup "${key}"`);
     }
     return fn() as T;
   }

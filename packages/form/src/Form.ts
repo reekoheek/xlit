@@ -2,6 +2,7 @@ import { NestedSchemaError, ObjectShape, ObjectType } from '@xlit/schema';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { DirectiveResult } from 'lit/directive.js';
 import { BindFieldDirective, FieldChangeEventName, bindFieldDirective } from './bindFieldDirective.js';
+import { FormError } from './FormError.js';
 
 type identity<T> = T;
 type Key<T extends ObjectShape> = keyof T;
@@ -12,13 +13,15 @@ type Errors<T extends ObjectShape> = identity<{ [key in Key<T>]?: string; }>;
 type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => unknown;
 
 export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveController {
-  private readonly schema: Schema<TShape>;
-  private readonly allKeys: Key<TShape>[];
-  private readonly touchedKeys = new Set<Key<TShape>>();
-  private readonly _state: State<TShape> = {};
-  private readonly _errors: Errors<TShape> = {};
+  private schema: Schema<TShape>;
+  private allKeys: Key<TShape>[];
+  private touchedKeys = new Set<Key<TShape>>();
+  private _state: State<TShape> = {};
+  private _errors: Errors<TShape> = {};
+  private _globalError = '';
 
   get state(): Readonly<State<TShape>> { return this._state; }
+  get globalError(): string { return this._globalError; }
   get errors(): Readonly<Errors<TShape>> { return this._errors; }
   get hasErrors(): boolean { return Object.keys(this.errors).length !== 0; }
   get allTouched(): boolean { return this.touchedKeys.size === this.allKeys.length; }
@@ -85,6 +88,11 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
     this.host.requestUpdate();
   }
 
+  setGlobalError(message: string): void {
+    this._globalError = message;
+    this.host.requestUpdate();
+  }
+
   bindInput(key: Key<TShape>): EventListener {
     return async(evt: Event) => {
       const value = (evt.target as HTMLInputElement).value;
@@ -96,6 +104,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
     return async(evt) => {
       evt.preventDefault();
 
+      this.setGlobalError('');
       const state: typeof this._state = { ...this.state };
       this.allKeys.forEach((key) => {
         if (state[key] === undefined) state[key] = undefined;
@@ -103,11 +112,23 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
       await this.setState(this.state);
 
       const model = this.model;
-      if (model) {
+      if (!model) {
+        return;
+      }
+
+      try {
         const result = this.onSubmit(model);
         if (result instanceof Promise) {
           await result;
         }
+      } catch (err) {
+        if (err instanceof FormError) {
+          this.setErrors(err.children);
+          return;
+        }
+
+        console.error('global error on submit:', err);
+        this.setGlobalError(err instanceof Error ? err.message : `${err}`);
       }
     };
   }

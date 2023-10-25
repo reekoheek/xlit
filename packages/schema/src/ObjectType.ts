@@ -1,6 +1,5 @@
 import { BaseType } from './BaseType.js';
 import { SchemaError } from './SchemaError.js';
-import { NestedSchemaError } from './NestedSchemaError.js';
 import { Type } from './Type.js';
 
 type requiredKeys<T extends object> = {
@@ -28,12 +27,12 @@ export class ObjectType<TShape extends ObjectShape> extends BaseType<flatten<fix
     }
 
     if (typeof value !== 'object') {
-      throw new SchemaError('invalid object');
+      throw new Error('invalid object');
     }
 
     const input = value as Record<string, unknown>;
     const output = {} as Record<string, unknown>;
-    const resultErr = new NestedSchemaError<TShape>('invalid object');
+    const resultErr = new SchemaError<TShape>('invalid object');
 
     await Promise.all(Object.keys(this.shape).map(async(key) => {
       try {

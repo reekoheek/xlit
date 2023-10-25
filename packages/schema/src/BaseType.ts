@@ -1,4 +1,3 @@
-import { SchemaError } from './SchemaError.js';
 import { Type } from './Type.js';
 
 type Filter<T> = (value: T) => Promise<T> | T;
@@ -47,7 +46,7 @@ class RequiredType<TBase extends Type<unknown>> extends BaseType<NonNullable<TBa
   protected async cast(value: unknown): Promise<NonNullable<TBase['_outputType']>> {
     const result = await this.baseType.resolve(value) ?? undefined;
     if (result === undefined) {
-      throw new SchemaError(this.message);
+      throw new Error(this.message);
     }
     return result;
   }
