@@ -1,5 +1,13 @@
 # @xlit/form
 
+## 2.7.5
+
+### Patch Changes
+
+- fix form
+- Updated dependencies
+  - @xlit/schema@2.7.5
+
 ## 2.7.4
 
 ### Patch Changes

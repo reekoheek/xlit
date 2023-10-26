@@ -1,6 +1,6 @@
 {
   "name": "@xlit/a11y-menu",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "description": "xlit a11y menu componentb",
   "type": "module",
   "main": "dist/index.js",

@@ -1,5 +1,11 @@
 # @xlit/event
 
+## 2.7.4
+
+### Patch Changes
+
+- fix form
+
 ## 2.7.3
 
 ### Patch Changes
