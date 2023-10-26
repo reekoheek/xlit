@@ -105,7 +105,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
       evt.preventDefault();
 
       this.setGlobalError('');
-      await this.setState(this.state, true);
+      await this.setState({ ...this.state }, true);
 
       const model = this.model;
       if (!model) {
