@@ -2,7 +2,7 @@ import { ObjectShape, ObjectType, SchemaError } from '@xlit/schema';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { DirectiveResult } from 'lit/directive.js';
 import { BindFieldDirective, FieldChangeEventName, bindFieldDirective } from './bindFieldDirective.js';
-import { FormError } from './FormError.js';
+import { isFormError } from './FormError.js';
 
 type identity<T> = T;
 type Key<T extends ObjectShape> = keyof T;
@@ -43,8 +43,8 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
     return oKeys.filter((key) => this.allKeys.includes(key));
   }
 
-  async setState(state: State<TShape>): Promise<void> {
-    const keys: Key<TShape>[] = this.allowedKeys(state);
+  async setState(state: State<TShape>, allKeys = false): Promise<void> {
+    const keys: Key<TShape>[] = allKeys ? this.allKeys : this.allowedKeys(state);
 
     keys.forEach((key) => {
       delete this._errors[key];
@@ -105,11 +105,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
       evt.preventDefault();
 
       this.setGlobalError('');
-      const state: typeof this._state = { ...this.state };
-      this.allKeys.forEach((key) => {
-        if (state[key] === undefined) state[key] = undefined;
-      });
-      await this.setState(this.state);
+      await this.setState(this.state, true);
 
       const model = this.model;
       if (!model) {
@@ -122,7 +118,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
           await result;
         }
       } catch (err) {
-        if (err instanceof FormError) {
+        if (isFormError(err)) {
           this.setErrors(err.children);
           return;
         }

@@ -1,5 +1,21 @@
 # @xlit/form
 
+## 2.7.4
+
+### Patch Changes
+
+- fix schema
+- Updated dependencies
+  - @xlit/router@2.7.4
+
+## 2.7.3
+
+### Patch Changes
+
+- fix schema
+- Updated dependencies
+  - @xlit/router@2.7.3
+
 ## 2.7.2
 
 ### Patch Changes

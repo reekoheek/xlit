@@ -1,6 +1,6 @@
 {
   "name": "@xlit/mixins",
-  "version": "2.7.2",
+  "version": "2.7.4",
   "description": "xlit common mixins",
   "type": "module",
   "main": "dist/index.js",

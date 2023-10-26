@@ -1,6 +1,6 @@
 {
   "name": "@xlit/event",
-  "version": "2.7.1",
+  "version": "2.7.3",
   "description": "xlit event",
   "type": "module",
   "main": "dist/index.js",

@@ -1,5 +1,17 @@
 # Change Log
 
+## 2.7.4
+
+### Patch Changes
+
+- fix schema
+
+## 2.7.3
+
+### Patch Changes
+
+- fix schema
+
 ## 2.7.2
 
 ### Patch Changes
