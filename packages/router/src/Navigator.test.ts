@@ -1,10 +1,10 @@
-import { assert, fixture, html } from '@open-wc/testing';
+import { describe, it, beforeEach, afterEach, expect } from 'vitest';
+import { fixture, html } from '@open-wc/testing';
 import { Navigator } from './Navigator.js';
 import { ElementOutlet, Outlet } from './Outlet.js';
 import { HistoryMode } from './HistoryMode.js';
 import { Dispatcher } from './Dispatcher.js';
 import { Context } from './Context.js';
-import { assertRejects } from './test/assertRejects.js';
 
 describe('Navigator', () => {
   beforeEach(async() => {
@@ -18,22 +18,22 @@ describe('Navigator', () => {
   describe('.run()', () => {
     it('run navigator', async() => {
       const dispatcher = new MockDispatcher();
-      assert.throws(() => Navigator['_'](), /navigator is not running/);
+      expect(() => Navigator['_']()).toThrowError(/navigator is not running/);
       await Navigator.run(dispatcher);
-      assert.strictEqual(Navigator['_']().constructor, Navigator);
-      await assertRejects(async() => await Navigator.run(dispatcher), /navigator already run/);
+      expect(Navigator['_']().constructor).toStrictEqual(Navigator);
+      await expect(async() => await Navigator.run(dispatcher)).rejects.toThrowError(/navigator already run/);
     });
 
     it('set default value', async() => {
       const dispatcher = new MockDispatcher();
       await Navigator.run(dispatcher);
       const navigator = Navigator['_']();
-      assert.strictEqual(navigator['dispatcher'], dispatcher);
-      assert.strictEqual(navigator['outlet'].constructor, ElementOutlet);
-      assert.strictEqual(navigator['mode'].constructor, HistoryMode);
-      assert.strictEqual(navigator['eventTarget'], window);
-      assert.strictEqual(navigator['history'], history);
-      assert.strictEqual(navigator['location'], location);
+      expect(navigator['dispatcher']).toStrictEqual(dispatcher);
+      expect(navigator['outlet'].constructor).toStrictEqual(ElementOutlet);
+      expect(navigator['mode'].constructor).toStrictEqual(HistoryMode);
+      expect(navigator['eventTarget']).toStrictEqual(window);
+      expect(navigator['history']).toStrictEqual(history);
+      expect(navigator['location']).toStrictEqual(location);
     });
   });
 
@@ -43,9 +43,9 @@ describe('Navigator', () => {
       const history = new MockHistory();
       await Navigator.run(dispatcher, mockOptions({ history }));
       await Navigator.push('/foo');
-      assert.strictEqual(dispatcher.hits[1].path, '/foo');
-      assert.strictEqual(history.hits.length, 1);
-      assert.strictEqual(history.hits[0], 'push:/foo');
+      expect(dispatcher.hits[1].path).toStrictEqual('/foo');
+      expect(history.hits.length).toStrictEqual(1);
+      expect(history.hits[0]).toStrictEqual('push:/foo');
     });
   });
 
@@ -55,9 +55,9 @@ describe('Navigator', () => {
       const history = new MockHistory();
       await Navigator.run(dispatcher, mockOptions({ history }));
       await Navigator.replace('/foo');
-      assert.strictEqual(dispatcher.hits[1].path, '/foo');
-      assert.strictEqual(history.hits.length, 1);
-      assert.strictEqual(history.hits[0], 'replace:/foo');
+      expect(dispatcher.hits[1].path).toStrictEqual('/foo');
+      expect(history.hits.length).toStrictEqual(1);
+      expect(history.hits[0]).toStrictEqual('replace:/foo');
     });
   });
 
@@ -66,7 +66,7 @@ describe('Navigator', () => {
       const history = new MockHistory();
       await Navigator.run(new MockDispatcher(), mockOptions({ history }));
       await Navigator.go(123);
-      assert.strictEqual(history.hits[0], 'go:123');
+      expect(history.hits[0]).toStrictEqual('go:123');
     });
   });
 
@@ -75,7 +75,7 @@ describe('Navigator', () => {
       const history = new MockHistory();
       await Navigator.run(new MockDispatcher(), mockOptions({ history }));
       await Navigator.pop();
-      assert.strictEqual(history.hits[0], 'go:-1');
+      expect(history.hits[0]).toStrictEqual('go:-1');
     });
   });
 
@@ -86,8 +86,8 @@ describe('Navigator', () => {
       await Navigator.run(dispatcher, mockOptions({ location }));
       Navigator['_']()['popstateListener'](new CustomEvent('popstate'));
       await new Promise((resolve) => setTimeout(resolve));
-      assert.strictEqual(dispatcher.hits.length, 1);
-      assert.strictEqual(dispatcher.hits[0].path, '/foo');
+      expect(dispatcher.hits.length).toStrictEqual(1);
+      expect(dispatcher.hits[0].path).toStrictEqual('/foo');
     });
   });
 
@@ -102,7 +102,7 @@ describe('Navigator', () => {
       `);
       let invoked = false;
       root.addEventListener('click', (evt) => {
-        assert.strictEqual(false, evt.defaultPrevented);
+        expect(false).toStrictEqual(evt.defaultPrevented);
         evt.preventDefault();
         invoked = true;
       });
@@ -112,9 +112,9 @@ describe('Navigator', () => {
       const dispatcher = new MockDispatcher();
       await Navigator.run(dispatcher, mockOptions({ eventTarget: target, history }));
       child.click();
-      assert.strictEqual(history.hits.length, 0);
-      assert.strictEqual(dispatcher.hits.length, 1);
-      assert.strictEqual(invoked, true);
+      expect(history.hits.length).toStrictEqual(0);
+      expect(dispatcher.hits.length).toStrictEqual(1);
+      expect(invoked).toStrictEqual(true);
     });
 
     it('push state and dispatch', async() => {
@@ -137,10 +137,10 @@ describe('Navigator', () => {
       await Navigator.run(dispatcher, mockOptions({ eventTarget: target, history }));
       clickable.click();
       await new Promise((resolve) => setTimeout(resolve));
-      assert.strictEqual(invoked, false);
-      assert.strictEqual(history.hits.length, 1);
-      assert.strictEqual(dispatcher.hits.length, 2);
-      assert.strictEqual(dispatcher.hits[1].path, '/foo');
+      expect(invoked).toStrictEqual(false);
+      expect(history.hits.length).toStrictEqual(1);
+      expect(dispatcher.hits.length).toStrictEqual(2);
+      expect(dispatcher.hits[1].path).toStrictEqual('/foo');
     });
   });
 
@@ -148,23 +148,23 @@ describe('Navigator', () => {
     it('immediate return if same context', async() => {
       const dispatcher = new MockDispatcher();
       await Navigator.run(dispatcher);
-      assert.strictEqual(dispatcher.hits.length, 1);
+      expect(dispatcher.hits.length).toStrictEqual(1);
       const navigator = Navigator['_']();
       navigator['currentCtx'] = new Context('/foo');
       await navigator['dispatch'](new Context('/foo'));
-      assert.strictEqual(dispatcher.hits.length, 1);
+      expect(dispatcher.hits.length).toStrictEqual(1);
     });
 
     it('throw error if no context result', async() => {
       const dispatcher = new MockDispatcher();
       await Navigator.run(dispatcher);
-      assert.strictEqual(dispatcher.hits.length, 1);
+      expect(dispatcher.hits.length).toStrictEqual(1);
       const navigator = Navigator['_']();
 
       dispatcher['result'] = undefined;
-      await assertRejects(async() => {
+      await expect(async() => {
         await navigator['dispatch'](new Context('/foo'));
-      }, /no result route/);
+      }).rejects.toThrowError(/no result route/);
     });
   });
 });

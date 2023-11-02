@@ -24,6 +24,10 @@ export class A11yMenu extends LitElement {
     this.btnclass = '';
   }
 
+  static import() {
+    // noop
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
 

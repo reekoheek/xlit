@@ -1,8 +1,10 @@
 import { Middleware } from '../Middleware.js';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getLayout(o: any): string {
-  return o?.layout ?? '';
+function getLayout(o: unknown): string {
+  if (!o) {
+    return '';
+  }
+  return (o as { layout: string }).layout ?? '';
 }
 
 export function layout(root: HTMLElement = document.body): Middleware<object> {

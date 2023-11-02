@@ -4,99 +4,103 @@ import { DirectiveResult } from 'lit/directive.js';
 import { BindFieldDirective, FieldChangeEventName, bindFieldDirective } from './bindFieldDirective.js';
 import { isFormError } from './FormError.js';
 
-type identity<T> = T;
 type Key<T extends ObjectShape> = keyof T;
 type Schema<T extends ObjectShape> = ObjectType<T>;
 type Model<T extends ObjectShape> = NonNullable<Schema<T>['_outputType']>;
-type State<T extends ObjectShape> = Partial<Model<T>>;
-type Errors<T extends ObjectShape> = identity<{ [key in Key<T>]?: string; }>;
-type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => unknown;
+type State<T extends ObjectShape> = { [k in Key<T>]?: NonNullable<unknown>; };
+type Promised<T> = Promise<T> | T;
+type OnSubmitFn<T extends ObjectShape> = (model: Model<T>) => Promised<unknown>;
 
 export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveController {
   private schema: Schema<TShape>;
-  private allKeys: Key<TShape>[];
-  private touchedKeys = new Set<Key<TShape>>();
-  private _state: State<TShape> = {};
-  private _errors: Errors<TShape> = {};
+  private keys: Set<Key<TShape>>;
+  private touches = new Set<Key<TShape>>();
+  private _state = new Map<Key<TShape>, NonNullable<unknown>>();
+  private _errors = new Map<Key<TShape>, string>();
+  private _model: Partial<Model<TShape>> = {};
   private _globalError = '';
 
-  get state(): Readonly<State<TShape>> { return this._state; }
-  get globalError(): string { return this._globalError; }
-  get errors(): Readonly<Errors<TShape>> { return this._errors; }
-  get hasErrors(): boolean { return Object.keys(this.errors).length !== 0; }
-  get allTouched(): boolean { return this.touchedKeys.size === this.allKeys.length; }
-  get ok(): boolean { return this.allTouched && !this.hasErrors; }
-  get model(): Model<TShape> | undefined { return this.ok ? this.state as Model<TShape> : undefined; }
+  get globalError(): string {
+    return this._globalError;
+  }
+
+  get ok(): boolean {
+    if (this.touches.size !== this.keys.size) {
+      return false;
+    }
+
+    if (this._errors.size !== 0) {
+      return false;
+    }
+
+    return true;
+  }
+
+  get model(): Model<TShape> | undefined {
+    return this.ok ? this._model as Model<TShape> : undefined;
+  }
 
   constructor(private host: ReactiveControllerHost, shape: TShape, private onSubmit: OnSubmitFn<TShape>) {
     this.host.addController(this);
     this.schema = new ObjectType(shape);
-    this.allKeys = Object.keys(shape);
+    this.keys = new Set(Object.keys(shape));
   }
 
   hostConnected(): void {
     // noop
   }
 
-  protected allowedKeys(o: Record<string, unknown>): Key<TShape>[] {
-    const oKeys: Key<TShape>[] = Object.keys(o);
-    return oKeys.filter((key) => this.allKeys.includes(key));
+  state(key: Key<TShape>) {
+    return this._state.get(key) ?? null;
   }
 
-  async setState(state: State<TShape>, allKeys = false): Promise<void> {
-    const keys: Key<TShape>[] = allKeys ? this.allKeys : this.allowedKeys(state);
+  error(key: Key<TShape>): string {
+    return this._errors.get(key) ?? '';
+  }
 
-    keys.forEach((key) => {
-      delete this._errors[key];
-      this._state[key] = state[key];
-      this.touchedKeys.add(key);
-    });
+  async setStateProperty(key: Key<TShape>, value: unknown): Promise<void> {
+    const updating = await this._set(key, value);
+    if (updating) {
+      this.host.requestUpdate();
+    }
+  }
 
-    try {
-      const schema = this.schema.pick(keys).required();
-      const newState = await schema.resolve(state);
-      keys.forEach((key) => {
-        delete this._state[key];
-        if (newState[key] !== undefined) {
-          this._state[key] = newState[key];
-        }
-      });
-    } catch (err) {
-      if (!(err instanceof SchemaError)) {
-        throw err;
-      }
+  async setState(state: State<TShape>): Promise<void> {
+    const updating = await Promise.all([...this.keys].map((key) => this._set(key, state[key])));
+    if (updating.includes(true)) {
+      this.host.requestUpdate();
+    }
+  }
 
-      const childErrs = err.children;
-      keys.forEach((key) => {
-        const childErr = childErrs[key];
-        if (childErr) {
-          this._errors[key] = childErr.message;
-        }
-      });
+  setError(err: unknown) {
+    if (!err) {
+      throw new Error('cannot set error to nullable');
     }
 
     this.host.requestUpdate();
-  }
 
-  setErrors(errors: Errors<TShape>): void {
-    const keys: Key<TShape>[] = this.allowedKeys(errors);
+    if (!isFormError(err)) {
+      this._globalError = err instanceof Error ? err.message : `${err}`;
+      console.error('global error raised', this._globalError, err);
+      return;
+    }
 
-    keys.forEach((key) => {
-      this._errors[key] = errors[key];
+    const children = err.children;
+    const reporterErrMap: Record<string, string> = {};
+    Object.keys(err.children).forEach((key) => {
+      if (this.keys.has(key)) {
+        const error = children[key];
+        reporterErrMap[key] = error;
+        this._errors.set(key, error);
+      }
     });
-
-    this.host.requestUpdate();
-  }
-
-  setGlobalError(message: string): void {
-    this._globalError = message;
-    this.host.requestUpdate();
+    console.error('form error raised', reporterErrMap, err);
   }
 
   bindInput(key: Key<TShape>): EventListener {
-    return async(evt: Event) => {
+    return (evt: Event) => {
       const value = (evt.target as HTMLInputElement).value;
-      await this.setState({ [key]: value } as State<TShape>);
+      this.setStateProperty(key, value);
     };
   }
 
@@ -104,8 +108,7 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
     return async(evt) => {
       evt.preventDefault();
 
-      this.setGlobalError('');
-      await this.setState({ ...this.state }, true);
+      await this.setState(Object.fromEntries(this._state) as State<TShape>);
 
       const model = this.model;
       if (!model) {
@@ -113,23 +116,59 @@ export class Form<TShape extends ObjectShape = ObjectShape> implements ReactiveC
       }
 
       try {
-        const result = this.onSubmit(model);
-        if (result instanceof Promise) {
-          await result;
-        }
+        await this.onSubmit(model);
+        this._globalError = '';
+        this.host.requestUpdate();
       } catch (err) {
-        if (isFormError(err)) {
-          this.setErrors(err.children);
-          return;
-        }
-
-        console.error('global error on submit:', err);
-        this.setGlobalError(err instanceof Error ? err.message : `${err}`);
+        this.setError(err);
       }
     };
   }
 
   bindField(key: Key<TShape>, eventNames?: FieldChangeEventName[]): DirectiveResult<typeof BindFieldDirective> {
     return bindFieldDirective(this, key, eventNames);
+  }
+
+  private async _set(key: Key<TShape>, value: unknown): Promise<boolean> {
+    if (!this.keys.has(key)) {
+      return false;
+    }
+
+    if (value === '' || value === null || value === undefined) {
+      value = undefined;
+    }
+
+    if (this.touches.has(key) && this._state.get(key) === value) {
+      return false;
+    }
+
+    this.touches.add(key);
+    if (value) {
+      this._state.set(key, value);
+    } else {
+      this._state.delete(key);
+    }
+
+    try {
+      this._errors.delete(key);
+      const schema = this.schema.pick([key]).required();
+      const result = await schema.resolve({ [key]: value });
+      if (result[key] === undefined) {
+        delete this._model[key];
+      } else {
+        this._model[key] = result[key];
+      }
+    } catch (err) {
+      if (err instanceof SchemaError) {
+        const childErr = err.children[key];
+        if (childErr) {
+          this._errors.set(key, childErr.message);
+        }
+      } else {
+        console.error('unknown error', err);
+        this._globalError = err instanceof Error ? err.message : `${err}`;
+      }
+    }
+    return true;
   }
 }

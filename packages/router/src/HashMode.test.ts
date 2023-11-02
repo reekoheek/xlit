@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { HashMode } from './HashMode.js';
 import { LocationInterface } from './types.js';
 
@@ -6,16 +6,16 @@ describe('HashMode', () => {
   describe('#getContextPath()', () => {
     it('return context path from location', () => {
       const mode = new HashMode();
-      assert.strictEqual(mode.getContextPath(new MockLocation()), '/');
-      assert.strictEqual(mode.getContextPath(new MockLocation('/', '', '#!foo')), '/foo');
+      expect(mode.getContextPath(new MockLocation())).toStrictEqual('/');
+      expect(mode.getContextPath(new MockLocation('/', '', '#!foo'))).toStrictEqual('/foo');
     });
   });
 
   describe('#getHistoryUrl()', () => {
     it('return history url from path', () => {
       const mode = new HashMode();
-      assert.strictEqual(mode.getHistoryUrl('/foo'), '#!/foo');
-      assert.strictEqual(mode.getHistoryUrl('/bar'), '#!/bar');
+      expect(mode.getHistoryUrl('/foo')).toStrictEqual('#!/foo');
+      expect(mode.getHistoryUrl('/bar')).toStrictEqual('#!/bar');
     });
   });
 });

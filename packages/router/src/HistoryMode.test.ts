@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { HistoryMode } from './HistoryMode.js';
 import { LocationInterface } from './types.js';
 
@@ -6,27 +6,27 @@ describe('HistoryMode', () => {
   describe('#getContextPath()', () => {
     it('return context path from location', () => {
       const mode = new HistoryMode();
-      assert.strictEqual(mode.getContextPath(new MockLocation()), '/');
-      assert.strictEqual(mode.getContextPath(new MockLocation('/foo')), '/foo');
+      expect(mode.getContextPath(new MockLocation())).toStrictEqual('/');
+      expect(mode.getContextPath(new MockLocation('/foo'))).toStrictEqual('/foo');
     });
 
     it('throw error if base path not match', () => {
       const mode = new HistoryMode('/foo');
-      assert.throws(() => mode.getContextPath(new MockLocation('/bar')), /invalid location/);
+      expect(() => mode.getContextPath(new MockLocation('/bar'))).toThrowError(/invalid location/);
     });
   });
 
   describe('#getHistoryUrl()', () => {
     it('return history url from path', () => {
       const mode = new HistoryMode();
-      assert.strictEqual(mode.getHistoryUrl('/foo'), '/foo');
-      assert.strictEqual(mode.getHistoryUrl('/bar'), '/bar');
+      expect(mode.getHistoryUrl('/foo')).toStrictEqual('/foo');
+      expect(mode.getHistoryUrl('/bar')).toStrictEqual('/bar');
     });
 
     it('prefix with base path', () => {
       const mode = new HistoryMode('/foo');
-      assert.strictEqual(mode.getHistoryUrl('/foo'), '/foo/foo');
-      assert.strictEqual(mode.getHistoryUrl('/bar'), '/foo/bar');
+      expect(mode.getHistoryUrl('/foo')).toStrictEqual('/foo/foo');
+      expect(mode.getHistoryUrl('/bar')).toStrictEqual('/foo/bar');
     });
   });
 });

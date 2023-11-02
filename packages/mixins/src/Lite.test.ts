@@ -1,6 +1,7 @@
+import { describe, it, expect } from 'vitest';
 import { LitElement, html } from 'lit';
 import { Lite } from './Lite.js';
-import { assert, fixture } from '@open-wc/testing';
+import { fixture } from '@open-wc/testing';
 import { customElement } from 'lit/decorators.js';
 
 describe('Lite', () => {
@@ -11,6 +12,6 @@ describe('Lite', () => {
     }
 
     const el: Foo = await fixture(html`<x-foo></x-foo>`);
-    assert.strictEqual(el.renderRoot, el);
+    expect(el.renderRoot).toStrictEqual(el);
   });
 });

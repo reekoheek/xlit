@@ -33,8 +33,8 @@ export class BindFieldDirective extends Directive {
       }
     }
 
-    el.value = form.state[name] ?? null;
-    el.error = form.errors[name];
+    el.value = form.state(name);
+    el.error = form.error(name);
     return this.render();
   }
 

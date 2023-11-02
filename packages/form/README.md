@@ -13,7 +13,7 @@ npm i @xlit/form
 ```typescript
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { Form } from '@xlit/form';
+import { Form, FormError } from '@xlit/form';
 import { StringType } from '@xlit/schema';
 
 @customElement('page-foo')
@@ -23,6 +23,14 @@ class PageFoo extends LitElement {
     bar: new StringType().required(),
   }, (model) => {
     // do something with model here
+
+    // to set field error throw FormError
+    if (err) {
+      throw new FormError('server err', {
+        foo: 'something happened with foo',
+        bar: 'something happened with bar',
+      });
+    }
   });
 
   render (): unknown {
@@ -31,13 +39,13 @@ class PageFoo extends LitElement {
         <div>
           <label>Foo</label>
           <input type="text" ${this.form.bindField('foo')}>
-          <span class="form-text">${this.form.errors.foo}</span>
+          <span class="form-text">${this.form.error('foo')}</span>
         </div>
 
         <div>
           <label>Bar</label>
           <input type="text" ${this.form.bindField('bar')}>
-          <span class="form-text">${this.form.errors.bar}</span>
+          <span class="form-text">${this.form.error('bar')}</span>
         </div>
 
         <div>

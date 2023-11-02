@@ -1,5 +1,6 @@
+import { describe, it, expect } from 'vitest';
 import { html } from 'lit';
-import { assert, fixture } from '@open-wc/testing';
+import { fixture } from '@open-wc/testing';
 import './a11y-menu.js';
 
 describe('a11y-menu', () => {
@@ -10,6 +11,6 @@ describe('a11y-menu', () => {
         <main></main>
       </div>
     `);
-    assert.strictEqual(el.innerHTML.includes('Skip to main content'), true);
+    expect(el.innerHTML).includes('Skip to main content');
   });
 });

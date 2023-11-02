@@ -2,7 +2,7 @@ import { Mediator } from './Mediator.js';
 import { Request } from './Request.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Constructor<T = object> = new (..._: any[]) => T;
+type Constructor<T = object> = new (...args: any[]) => T;
 
 type Command = Request;
 

@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { Context, Router } from './index.js';
 
 describe('Router', () => {
@@ -6,8 +6,8 @@ describe('Router', () => {
     it('add middlewares', () => {
       const router = new Router();
       const retval = router.use(() => Promise.resolve());
-      assert.strictEqual(router['middlewares'].length, 1);
-      assert.strictEqual(router, retval);
+      expect(router['middlewares'].length).toStrictEqual(1);
+      expect(router).toStrictEqual(retval);
     });
   });
 
@@ -15,13 +15,13 @@ describe('Router', () => {
     it('add routes', () => {
       const router = new Router();
       const retval = router.route('/foo', createRouteFn('foo'));
-      assert.strictEqual(router['routes'].length, 1);
-      assert.strictEqual(router, retval);
+      expect(router['routes'].length).toStrictEqual(1);
+      expect(router).toStrictEqual(retval);
     });
 
     it('throw error on invalid optional params', () => {
       const router = new Router();
-      assert.throws(() => router.route('/foo[[', createRouteFn('foo')), /invalid use of optional params/);
+      expect(() => router.route('/foo[[', createRouteFn('foo'))).toThrowError(/invalid use of optional params/);
     });
   });
 
@@ -47,14 +47,14 @@ describe('Router', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let ctx = new Context<any>('/foo');
       await router.dispatch(ctx);
-      assert.strictEqual(ctx.result?.tagName, 'FOO');
-      assert.deepStrictEqual(ctx.state.hits, ['1', '2', 'foo', '/2', '/1']);
+      expect(ctx.result?.tagName).toStrictEqual('FOO');
+      expect(ctx.state.hits).toMatchObject(['1', '2', 'foo', '/2', '/1']);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ctx = new Context<any>('/bar');
       await router.dispatch(ctx);
-      assert.strictEqual(ctx.result, undefined);
-      assert.deepStrictEqual(ctx.state.hits, ['1', '2', '/2', '/1']);
+      expect(ctx.result).toStrictEqual(undefined);
+      expect(ctx.state.hits).toMatchObject(['1', '2', '/2', '/1']);
     });
   });
 });

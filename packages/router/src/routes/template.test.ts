@@ -1,6 +1,6 @@
-import { assert, fixture, html } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
+import { fixture, html } from '@open-wc/testing';
 import { template } from './template.js';
-import { assertRejects } from '../test/assertRejects.js';
 
 describe('template()', () => {
   it('return element if invoked', async() => {
@@ -13,13 +13,13 @@ describe('template()', () => {
     const fn = template(tpl);
     const param = {} as Parameters<typeof fn>[0];
     const result = await fn(param);
-    assert.strictEqual('<foo>foo</foo>', result.outerHTML);
+    expect('<foo>foo</foo>').toStrictEqual(result.outerHTML);
   });
 
   it('throw error on invalid template', async() => {
     const emptyTemplate = document.createElement('template');
     const fn = template(emptyTemplate);
     const param = {} as Parameters<typeof fn>[0];
-    await assertRejects(() => fn(param), /invalid template to render/);
+    await expect(async() => await fn(param)).rejects.toThrowError(/invalid template to render/);
   });
 });

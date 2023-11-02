@@ -4,7 +4,9 @@ export class FormError extends Error {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isFormError(err: any): err is FormError {
-  return typeof err.children === 'object';
+export function isFormError(err: unknown): err is FormError {
+  if (!err) {
+    return false;
+  }
+  return typeof (err as { children: unknown }).children === 'object';
 }

@@ -1,8 +1,10 @@
+import { describe, it, expect } from 'vitest';
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Form } from './Form.js';
 import { StringType } from '@xlit/schema';
-import { assert, fixture } from '@open-wc/testing';
+import { fixture } from '@open-wc/testing';
+import { FormError } from './FormError.js';
 
 describe('Form', () => {
   it('run', async() => {
@@ -37,7 +39,7 @@ describe('Form', () => {
     input.value = '';
     input.dispatchEvent(new CustomEvent('input'));
     await new Promise(resolve => setTimeout(resolve));
-    assert.strictEqual(input.value, '');
+    expect(input.value).toStrictEqual('');
 
     input.value = 'foo-value';
     input.dispatchEvent(new CustomEvent('input'));
@@ -45,7 +47,7 @@ describe('Form', () => {
 
     submitBtn.click();
     await new Promise(resolve => setTimeout(resolve));
-    assert.deepStrictEqual(mock.model, { foo: 'foo-value' });
+    expect(mock.model).toMatchObject({ foo: 'foo-value' });
   });
 
   describe('#setState()', () => {
@@ -55,16 +57,19 @@ describe('Form', () => {
         foo: new StringType().required(),
       }, () => undefined);
 
-      assert.deepStrictEqual(form.errors, {});
-      assert.deepStrictEqual(form.state, {});
+      expect(form.error('foo')).toStrictEqual('');
+      expect(form.ok).toStrictEqual(false);
+      expect(form.model).toStrictEqual(undefined);
 
       await form.setState({ foo: '' });
-      assert.deepStrictEqual(form.errors, { foo: 'must be required' });
-      assert.deepStrictEqual(form.state, { foo: '' });
+      expect(form.error('foo')).toStrictEqual('must be required');
+      expect(form.ok).toStrictEqual(false);
+      expect(form.model).toStrictEqual(undefined);
 
       await form.setState({ foo: 'foo' });
-      assert.deepStrictEqual(form.errors, {});
-      assert.deepStrictEqual(form.state, { foo: 'foo' });
+      expect(form.error('foo')).toStrictEqual('');
+      expect(form.ok).toStrictEqual(true);
+      expect(form.model).toMatchObject({ foo: 'foo' });
     });
   });
 
@@ -73,40 +78,11 @@ describe('Form', () => {
       const form = new Form(new MockHost(), {
         foo: new StringType().required(),
       }, () => undefined);
-      assert.strictEqual(form.model, undefined);
+      expect(form.model).toStrictEqual(undefined);
       await form.setState({ foo: '' });
-      assert.strictEqual(form.model, undefined);
+      expect(form.model).toStrictEqual(undefined);
       await form.setState({ foo: 'foo' });
-      assert.deepStrictEqual(form.model, { foo: 'foo' });
-    });
-  });
-
-  describe('#hasErrors', () => {
-    it('return true if has errors', async() => {
-      const form = new Form(new MockHost(), {
-        foo: new StringType().required(),
-      }, () => undefined);
-
-      assert.strictEqual(form.hasErrors, false);
-      await form.setState({ foo: '' });
-      assert.strictEqual(form.hasErrors, true);
-      await form.setState({ foo: 'foo' });
-      assert.strictEqual(form.hasErrors, false);
-    });
-  });
-
-  describe('#allTouched', () => {
-    it('return true if all touched', async() => {
-      const form = new Form(new MockHost(), {
-        foo: new StringType(),
-        bar: new StringType(),
-      }, () => undefined);
-
-      assert.strictEqual(form.allTouched, false);
-      await form.setState({ foo: '' });
-      assert.strictEqual(form.allTouched, false);
-      await form.setState({ bar: '' });
-      assert.strictEqual(form.allTouched, true);
+      expect(form.model).toMatchObject({ foo: 'foo' });
     });
   });
 
@@ -116,11 +92,34 @@ describe('Form', () => {
         foo: new StringType().required(),
       }, () => undefined);
 
-      assert.strictEqual(form.ok, false);
+      expect(form.ok).toStrictEqual(false);
       await form.setState({ foo: '' });
-      assert.strictEqual(form.ok, false);
+      expect(form.ok).toStrictEqual(false);
       await form.setState({ foo: 'foo' });
-      assert.strictEqual(form.ok, true);
+      expect(form.ok).toStrictEqual(true);
+    });
+  });
+
+  describe('#setError()', () => {
+    it('set global error if err is not form error', () => {
+      const form = new Form(new MockHost(), {
+        foo: new StringType().required(),
+      }, () => undefined);
+      form.setError(new Error('ouch'));
+      expect(form.globalError).toStrictEqual('ouch');
+      expect(form.error('foo')).toStrictEqual('');
+    });
+
+    it('set field error if err is form error', () => {
+      const form = new Form(new MockHost(), {
+        foo: new StringType().required(),
+      }, () => undefined);
+      const err = new FormError('ouch', {
+        foo: 'ouch foo',
+      });
+      form.setError(err);
+      expect(form.globalError).toStrictEqual('');
+      expect(form.error('foo')).toStrictEqual('ouch foo');
     });
   });
 });

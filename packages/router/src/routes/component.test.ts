@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { component } from './component.js';
 
 describe('component()', () => {
@@ -11,7 +11,7 @@ describe('component()', () => {
     const fn = component('x-foo', load);
     const param = {} as Parameters<typeof fn>[0];
     const result = await fn(param);
-    assert.strictEqual('<x-foo></x-foo>', result.outerHTML);
-    assert.strictEqual(true, loaded);
+    expect('<x-foo></x-foo>').toStrictEqual(result.outerHTML);
+    expect(true).toStrictEqual(loaded);
   });
 });

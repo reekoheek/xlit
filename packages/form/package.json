@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "prepublishOnly": "pnpm checkall",
+    "dev": "vite",
     "clean": "rm -rf .wireit coverage dist",
     "checkall": "pnpm lint && pnpm test && pnpm build",
     "lint": "wireit",
@@ -18,7 +19,7 @@
     "build:js": "wireit",
     "build:types": "wireit",
     "test": "wireit",
-    "test:watch": "wtr --watch"
+    "test:watch": "vitest watch --coverage --environment=jsdom"
   },
   "wireit": {
     "lint": {
@@ -62,7 +63,7 @@
       ]
     },
     "test": {
-      "command": "wtr",
+      "command": "vitest run --coverage --environment=jsdom",
       "dependencies": [
         "../schema:build"
       ],
@@ -94,6 +95,6 @@
   },
   "dependencies": {
     "@xlit/schema": "workspace:*",
-    "lit": "^3.0.0"
+    "lit": "^3.0.1"
   }
 }

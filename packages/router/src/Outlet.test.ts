@@ -1,4 +1,4 @@
-import { assert } from '@open-wc/testing';
+import { describe, it, expect } from 'vitest';
 import { ElementOutlet } from './Outlet.js';
 import { toContextedElement } from './ContextedElement.js';
 import { Context } from './Context.js';
@@ -9,10 +9,10 @@ describe('ElementOutlet', () => {
       const el = document.createElement('div');
       const outlet = new ElementOutlet(el);
       outlet.render(toContextedElement(document.createElement('result'), {} as Context<object>));
-      assert.strictEqual(el.innerHTML.includes('<result>'), true);
+      expect(el.innerHTML.includes('<result>')).toStrictEqual(true);
       outlet.render(toContextedElement(document.createElement('other'), {} as Context<object>));
-      assert.strictEqual(el.innerHTML.includes('<result>'), false);
-      assert.strictEqual(el.innerHTML.includes('<other>'), true);
+      expect(el.innerHTML.includes('<result>')).toStrictEqual(false);
+      expect(el.innerHTML.includes('<other>')).toStrictEqual(true);
     });
   });
 });
