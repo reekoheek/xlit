@@ -1,5 +1,16 @@
 # @xlit/form
 
+## 2.8.0
+
+### Minor Changes
+
+- form new api
+
+### Patch Changes
+
+- Updated dependencies
+  - @xlit/schema@2.8.0
+
 ## 2.7.5
 
 ### Patch Changes

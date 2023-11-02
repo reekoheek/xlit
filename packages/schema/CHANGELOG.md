@@ -1,5 +1,11 @@
 # @xlit/schema
 
+## 2.8.0
+
+### Minor Changes
+
+- form new api
+
 ## 2.7.5
 
 ### Patch Changes

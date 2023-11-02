@@ -1,5 +1,11 @@
 # @xlit/event
 
+## 2.8.0
+
+### Minor Changes
+
+- form new api
+
 ## 2.7.4
 
 ### Patch Changes
