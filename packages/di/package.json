@@ -15,8 +15,6 @@
     "checkall": "pnpm lint && pnpm test && pnpm build",
     "lint": "wireit",
     "build": "wireit",
-    "build:js": "wireit",
-    "build:types": "wireit",
     "test": "wireit",
     "test:watch": "vitest watch --coverage"
   },
@@ -29,30 +27,12 @@
       "output": []
     },
     "build": {
-      "dependencies": [
-        "build:js",
-        "build:types"
-      ],
-      "files": [
-        "./src/**/*.ts"
-      ]
-    },
-    "build:js": {
-      "command": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./dist",
+      "command": "esbuild ./src/index.ts --packages=external --bundle --platform=neutral --minify --sourcemap --outdir=./dist && tsc -p tsconfig.build.json --emitDeclarationOnly",
       "files": [
         "./src/**/*.ts"
       ],
       "output": [
-        "./dist/index.js{,.map}"
-      ]
-    },
-    "build:types": {
-      "command": "tsc -p tsconfig.build.json --emitDeclarationOnly",
-      "files": [
-        "./src/**/*.ts"
-      ],
-      "output": [
-        "./dist/*.d.ts{,.map}"
+        "./dist/**"
       ]
     },
     "test": {
