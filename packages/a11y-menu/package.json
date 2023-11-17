@@ -1,6 +1,6 @@
 {
   "name": "@xlit/a11y-menu",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "xlit a11y menu componentb",
   "type": "module",
   "main": "dist/index.js",
@@ -20,7 +20,7 @@
   },
   "wireit": {
     "lint": {
-      "command": "eslint ./src && tsc --noEmit",
+      "command": "eslint --color --cache --cache-location .eslintcache ./src && tsc --pretty --noEmit",
       "dependencies": [
         "../router:build"
       ],

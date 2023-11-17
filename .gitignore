@@ -21,3 +21,6 @@ packages/**/*.d.ts.map
 
 # vscode
 .vscode
+
+#eslint
+.eslintcache

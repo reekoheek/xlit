@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.8.1
+
+### Patch Changes
+
+- fix bugs
+
 ## 2.8.0
 
 ### Minor Changes

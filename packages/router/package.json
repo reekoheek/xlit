@@ -1,6 +1,6 @@
 {
   "name": "@xlit/router",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "xlit router",
   "type": "module",
   "main": "dist/index.js",
@@ -20,14 +20,14 @@
   },
   "wireit": {
     "lint": {
-      "command": "eslint ./src && tsc --noEmit",
+      "command": "eslint --color --cache --cache-location .eslintcache ./src && tsc --pretty --noEmit",
       "files": [
         "./src/**/*.ts"
       ],
       "output": []
     },
     "build": {
-      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist && tsc -p tsconfig.build.json --emitDeclarationOnly",
+      "command": "esbuild ./src/index.ts --packages=external --bundle --format=esm --minify --sourcemap --outdir=./dist && tsc --pretty -p tsconfig.build.json --emitDeclarationOnly",
       "files": [
         "./src/**/*.ts"
       ],
