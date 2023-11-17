@@ -33,6 +33,7 @@ export class Intl {
 
   setLocale(locale: string): this {
     this._locale = locale;
+    document.documentElement.setAttribute('lang', locale);
     return this;
   }
 
