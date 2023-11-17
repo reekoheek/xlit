@@ -3,7 +3,7 @@ import { SchemaError } from './SchemaError.js';
 import { Type } from './Type.js';
 
 export class ArrayType<T> extends BaseType<T[] | undefined> {
-  constructor(private itemType: Type<unknown>) {
+  constructor(private itemType: Type<T>) {
     super();
   }
 

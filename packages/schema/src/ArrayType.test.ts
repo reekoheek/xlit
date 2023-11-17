@@ -7,6 +7,7 @@ describe('ArrayType', () => {
   describe('#cast()', () => {
     it('cast to array of type', async() => {
       const schema = new ArrayType(new StringType());
+
       expect(await schema.resolve(undefined)).toStrictEqual(undefined);
       expect(await schema.resolve(['foo', 'bar'])).toEqual(['foo', 'bar']);
 
